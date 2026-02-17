@@ -1,0 +1,24 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-fix-the-home-page-end-to-end-behavior-so-the-predefined-match-word-to-image-game-appears-as-a-playable-thumbnail-card-in-the-home-game-grid-and-can-be-opened-to-the-existing-route-games-gameid",
+      "featureTitle": "Fix the Home page end-to-end behavior so the predefined \"Match Word to Image\" game appears as a playable thumbnail card in the Home game grid and can be opened to the existing route /games/$gameId.",
+      "files": [
+        "frontend/src/pages/HomePage.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-16"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Ensure predefined Match Word to Image appears on Home and opens /games/$gameId",
+  "requirements": [
+    {
+      "id": "REQ-16",
+      "summary": "Fix Home page loading behavior and game grid rendering so Match Word to Image appears as a clickable thumbnail and navigates to /games/match-word-to-image.",
+      "acceptanceCriteria": [
+        "When the app loads, Home shows a thumbnail card for \"Match Word to Image\" when the backend returns it from getAllGames().",
+        "Clicking the \"Match Word to Image\" card navigates to /games/match-word-to-image and renders the existing Game Launch experience for that game.",
+        "If getAllGames() is loading or errors, Home continues to show the existing English loading and error states (no regressions)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/HomePage.tsx",
+          "operation": "modify",
+          "description": "Ensure Home treats backend actor initialization as part of the loading state (so it does not show the empty \"No games available yet\" state before getAllGames() can run). Use the existing loading/error UI strings and keep the same end-to-end flow rendering <GameCard> for returned games."
+        },
+        {
+          "path": "frontend/public/assets/generated/game-thumbnail-placeholder.dim_800x600.png",
+          "operation": "create",
+          "description": "Add the generated placeholder thumbnail asset at this exact path so Home/GameCard can reliably render a thumbnail when a game icon is missing or fails to load."
+        },
+        {
+          "path": "frontend/public/assets/generated/rehab-game-hub-logo.dim_512x512.png",
+          "operation": "create",
+          "description": "Add the generated logo asset at this exact path so the App layout header logo reference resolves correctly across environments."
+        }
+      ]
+    }
+  ]
+}

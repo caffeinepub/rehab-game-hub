@@ -1,0 +1,20 @@
+{
+  "frontend/src/App.tsx": "Main application component that sets up TanStack Router with routes for Home, Game Manager, and Game Launch pages, all wrapped in a shared AppLayout.",
+  "frontend/src/components/AppLayout.tsx": "Shared layout component with header navigation (Home/Manager links), logo, and footer with caffeine.ai attribution.",
+  "frontend/src/pages/HomePage.tsx": "Home page that displays game cards in a grid, now properly waits for both actor initialization and game data loading before showing content or empty states.",
+  "frontend/src/pages/GameManagerPage.tsx": "Repurposed as the Match Word to Image question manager, showing question list and add question functionality without game creation/editing UI.",
+  "frontend/src/pages/GameLaunchPage.tsx": "Game launch page that renders interactive Match Word to Image gameplay when questions exist, or shows appropriate empty/coming soon states.",
+  "frontend/src/components/GameCard.tsx": "Reusable game card component displaying thumbnail, title, description, and tags with hover effects and fallback to placeholder image.",
+  "frontend/src/components/GameEditorDialog.tsx": "Game editor dialog now disabled for creating new games, only allows editing existing games (though this is also disabled in GameManagerPage).",
+  "frontend/src/components/ConfirmDeleteDialog.tsx": "Alert dialog component for confirming game deletion with loading state during the delete operation.",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations including game CRUD and Match Word to Image question CRUD with proper cache invalidation.",
+  "frontend/src/lib/assets.ts": "Centralized constants for static asset paths (logo and placeholder thumbnail).",
+  "frontend/src/index.css": "Global styles with OKLCH-based warm neutral color system for light and dark modes, optimized for calm therapy-focused aesthetic.",
+  "frontend/tailwind.config.js": "Tailwind configuration with extended color tokens, Inter font family, custom border radius, and enhanced shadow utilities.",
+  "frontend/src/lib/gameConstants.ts": "Defines the stable predefined game ID and metadata for the Match Word to Image game.",
+  "frontend/src/lib/shuffle.ts": "Utility functions for shuffling arrays and question options while preserving correctness tracking.",
+  "frontend/src/lib/externalBlob.ts": "Helper functions for converting ExternalBlob to object URLs for image rendering and creating ExternalBlobs from uploaded files.",
+  "frontend/src/components/MatchWordToImageQuestionList.tsx": "Displays a grid of question cards with image previews, options, and correct answer highlighting for the question manager.",
+  "frontend/src/components/MatchWordToImageQuestionEditorDialog.tsx": "Dialog form for creating new Match Word to Image questions with image upload, three options, and correct option selection.",
+  "frontend/src/components/MatchWordToImageGame.tsx": "Interactive gameplay component for Match Word to Image with shuffled questions/options, visual feedback for correct/incorrect selections, and gated progression."
+}
