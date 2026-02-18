@@ -27,6 +27,12 @@ export interface Game {
 export type GameId = string;
 export type Option = string;
 export type QuestionId = string;
+export interface ChooseCorrectImageQuestion {
+    id: string;
+    correctImageIndex: bigint;
+    word: string;
+    images: Array<ExternalBlob>;
+}
 export interface MatchWordToImageQuestion {
     id: QuestionId;
     correctOption: Option;
@@ -34,8 +40,10 @@ export interface MatchWordToImageQuestion {
     options: Array<Option>;
 }
 export interface backendInterface {
+    createChooseCorrectImageQuestion(gameId: GameId, word: string, images: Array<ExternalBlob>, correctImageIndex: bigint): Promise<ChooseCorrectImageQuestion>;
     createGame(id: GameId, name: string, description: string, icon: string, badges: Array<string>, primaryColor: string, secondaryColor: string, tags: Array<string>): Promise<void>;
     createQuestion(gameId: GameId, image: ExternalBlob, options: Array<Option>, correctOption: Option): Promise<QuestionId>;
+    getAllChooseCorrectImageQuestions(gameId: GameId): Promise<Array<ChooseCorrectImageQuestion>>;
     getAllGames(): Promise<Array<Game>>;
     getAllQuestions(gameId: GameId): Promise<Array<MatchWordToImageQuestion>>;
     getGameById(id: GameId): Promise<Game>;

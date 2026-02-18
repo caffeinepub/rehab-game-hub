@@ -2,12 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-frontend-home-page-experience-so-the-playable-games-always-appear-as-thumbnail-cards-and-selecting-a-card-navigates-to-games-gameid-to-start-the-game-immediately",
-      "featureTitle": "Update the frontend Home page experience so the playable games always appear as thumbnail cards and selecting a card navigates to `/games/$gameId` to start the game immediately.",
+      "featureId": "feature-update-the-match-word-to-image-gameplay-wrong-answer-feedback-so-that-selecting-an-incorrect-option-shows-the-same-large-red-x-overlay-style-used-in-choose-correct-image-semi-transparent-red-overlay-with-a-large-red-x-icon-centered-covering-only-the-specific-selected-option-block-not-the-entire-row-and-then-automatically-clears-after-a-short-delay-to-allow-unlimited-tries-on-the-same-question",
+      "featureTitle": "Update the Match Word to Image gameplay wrong-answer feedback so that selecting an incorrect option shows the same large red X overlay style used in Choose Correct Image (semi-transparent red overlay with a large red X icon centered), covering only the specific selected option block (not the entire row), and then automatically clears after a short delay to allow unlimited tries on the same question.",
       "files": [
-        "frontend/src/lib/gameConstants.ts",
-        "frontend/src/pages/GameLaunchPage.tsx",
-        "frontend/src/pages/HomePage.tsx"
+        "frontend/src/components/MatchWordToImageGame.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -18,7 +16,7 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-2"
+        "REQ-1"
       ],
       "confidence": "high"
     }

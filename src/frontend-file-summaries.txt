@@ -7,7 +7,7 @@
   "frontend/src/components/GameCard.tsx": "Reusable game card component displaying thumbnail, title, description, and tags with hover effects and fallback to placeholder image.",
   "frontend/src/components/GameEditorDialog.tsx": "Game editor dialog now disabled for creating new games, only allows editing existing games (though this is also disabled in GameManagerPage).",
   "frontend/src/components/ConfirmDeleteDialog.tsx": "Alert dialog component for confirming game deletion with loading state during the delete operation.",
-  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations including game CRUD, Match Word to Image questions, and Choose Correct Image questions with runtime checks for backend method availability.",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations including game CRUD, Match Word to Image questions, and Choose Correct Image questions with direct typed backend method calls and proper bigint conversion for correctImageIndex.",
   "frontend/src/lib/assets.ts": "Centralized constants for static asset paths (logo and placeholder thumbnail).",
   "frontend/src/index.css": "Global styles with OKLCH-based warm neutral color system for light and dark modes, optimized for calm therapy-focused aesthetic.",
   "frontend/tailwind.config.js": "Tailwind configuration with extended color tokens, Inter font family, custom border radius, and enhanced shadow utilities.",
@@ -16,10 +16,10 @@
   "frontend/src/lib/externalBlob.ts": "Helper functions for converting ExternalBlob to object URLs for image rendering and creating ExternalBlobs from uploaded files.",
   "frontend/src/components/MatchWordToImageQuestionList.tsx": "Displays a grid of question cards with image previews, options, and correct answer highlighting for the question manager.",
   "frontend/src/components/MatchWordToImageQuestionEditorDialog.tsx": "Dialog form for creating new Match Word to Image questions with image upload, three options, and correct option selection.",
-  "frontend/src/components/MatchWordToImageGame.tsx": "Interactive gameplay component for Match Word to Image with shuffled questions/options, visual feedback for correct/incorrect selections, and gated progression.",
+  "frontend/src/components/MatchWordToImageGame.tsx": "Interactive gameplay component for Match Word to Image with shuffled questions/options, visual feedback matching ChooseCorrectImageGame's red X overlay for incorrect selections, auto-reset after 800ms for unlimited retries, gated progression for correct answers, and inline horizontal layout for the three option buttons on tablet/desktop widths.",
   "frontend/src/backend.d.ts": "Extended TypeScript interface declarations for backend including ChooseCorrectImageQuestion type and related methods.",
-  "frontend/src/components/ChooseCorrectImageGame.tsx": "Interactive gameplay component for Choose Correct Image that displays a word prompt and clickable image options with unlimited retries until correct selection.",
-  "frontend/src/components/ChooseCorrectImageQuestionEditorDialog.tsx": "Dialog form for creating Choose Correct Image questions with word input, multiple image uploads, and correct image selection.",
-  "frontend/src/components/ChooseCorrectImageQuestionList.tsx": "Grid view displaying Choose Correct Image questions with word prompts and all uploaded images, clearly marking the correct image.",
-  "frontend/src/types/chooseCorrectImage.ts": "Type definition for ChooseCorrectImageQuestion with word, images array, and correct image index fields."
+  "frontend/src/components/ChooseCorrectImageGame.tsx": "Interactive gameplay component for Choose Correct Image that displays a word prompt and clickable image options with randomized question and image order, unlimited retries, and proper bigint handling.",
+  "frontend/src/components/ChooseCorrectImageQuestionEditorDialog.tsx": "Dialog form for creating Choose Correct Image questions with word input, exactly 3 image uploads, and correct image selection with proper validation and bigint conversion.",
+  "frontend/src/components/ChooseCorrectImageQuestionList.tsx": "Grid view displaying Choose Correct Image questions with word prompts and all uploaded images, clearly marking the correct image with proper bigint to number conversion.",
+  "frontend/src/types/chooseCorrectImage.ts": "Re-exports the backend ChooseCorrectImageQuestion type directly to avoid type drift and provides a helper function to convert bigint correctImageIndex to number for UI usage."
 }

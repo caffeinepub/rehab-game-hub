@@ -1,11 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Make predefined playable games reliably appear on the Home screen as selectable thumbnail cards and start immediately when selected.
+**Goal:** Make wrong-answer feedback in Match Word to Image match the existing Choose Correct Image red X overlay style, and auto-clear so users can retry indefinitely.
 
 **Planned changes:**
-- Automatically seed the backend game catalog so `getAllGames()` returns the predefined games on fresh install and after upgrades (re-seeding if missing), using stable game IDs (e.g., `match-word-to-image`, `choose-correct-image`).
-- Update the frontend Home page to render available games as a grid of thumbnail cards and navigate to `/games/$gameId` on selection to launch the game immediately.
-- Ensure seeded games launched from Home do not hit “Game not found” due to missing backend entries.
+- In MatchWordToImageGame, when an incorrect option is selected, render a semi-transparent red overlay with a large centered red X icon covering only the selected option block.
+- Automatically clear the incorrect overlay after a short delay (~800ms) and return the option states to idle so all options are clickable again.
+- Keep correct-answer behavior unchanged (correct feedback and ability to proceed to the next question).
 
-**User-visible outcome:** On opening the app, users see playable game thumbnails on the Home screen and can tap a game to start it right away.
+**User-visible outcome:** When a user taps a wrong option in Match Word to Image, that specific option briefly shows the same red X overlay style as Choose Correct Image, then resets automatically so the user can immediately try again without pressing Next.

@@ -1,8 +1,9 @@
-import type { ExternalBlob } from '@/backend';
+import type { ChooseCorrectImageQuestion as BackendChooseCorrectImageQuestion } from '@/backend';
 
-export interface ChooseCorrectImageQuestion {
-  id: string;
-  word: string;
-  images: ExternalBlob[];
-  correctImageIndex: number;
+// Re-export the backend type directly to avoid drift
+export type { ChooseCorrectImageQuestion } from '@/backend';
+
+// Helper to convert bigint to number for UI usage
+export function getCorrectImageIndex(question: BackendChooseCorrectImageQuestion): number {
+  return Number(question.correctImageIndex);
 }

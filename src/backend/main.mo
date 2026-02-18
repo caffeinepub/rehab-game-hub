@@ -4,11 +4,11 @@ import Text "mo:core/Text";
 import List "mo:core/List";
 import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
-import Migration "migration";
+
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
 
-(with migration = Migration.run)
+
 actor {
   include MixinStorage();
 
@@ -148,6 +148,53 @@ actor {
         );
         found;
       };
+    };
+  };
+
+  // Choose Correct Image Game Type
+
+  public type ChooseCorrectImageQuestion = {
+    id : Text;
+    word : Text;
+    images : [Storage.ExternalBlob];
+    correctImageIndex : Nat;
+  };
+
+  let persistentChooseCorrectImageQuestions = Map.empty<GameId, List.List<ChooseCorrectImageQuestion>>();
+
+  public shared ({ caller }) func createChooseCorrectImageQuestion(gameId : GameId, word : Text, images : [Storage.ExternalBlob], correctImageIndex : Nat) : async ChooseCorrectImageQuestion {
+    if (images.size() != 3) {
+      Runtime.trap("Exactly 3 images are required.");
+    };
+
+    if (correctImageIndex >= 3) {
+      Runtime.trap("Correct image index must be between 0 and 2.");
+    };
+
+    let newQuestion : ChooseCorrectImageQuestion = {
+      id = word;
+      word;
+      images;
+      correctImageIndex;
+    };
+
+    switch (persistentChooseCorrectImageQuestions.get(gameId)) {
+      case (null) {
+        let newList = List.empty<ChooseCorrectImageQuestion>();
+        newList.add(newQuestion);
+        persistentChooseCorrectImageQuestions.add(gameId, newList);
+      };
+      case (?existingQuestions) {
+        existingQuestions.add(newQuestion);
+      };
+    };
+    newQuestion;
+  };
+
+  public query ({ caller }) func getAllChooseCorrectImageQuestions(gameId : GameId) : async [ChooseCorrectImageQuestion] {
+    switch (persistentChooseCorrectImageQuestions.get(gameId)) {
+      case (null) { [] };
+      case (?questions) { questions.toArray() };
     };
   };
 };

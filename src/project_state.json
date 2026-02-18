@@ -1,18 +1,16 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Game app with a home screen that lists playable games as thumbnails; selecting a thumbnail starts the game immediately.",
+  "summary": "Educational mini-games project; update Match Word to Image game wrong-answer feedback to match Choose Correct Image design.",
   "architectural_notes": [],
-  "known_issues": [
-    "Game does not currently appear on the home screen as a playable option."
-  ],
-  "isFixRequest": true,
+  "known_issues": [],
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-update-the-frontend-home-page-experience-so-the-playable-games-always-appear-as-thumbnail-cards-and-selecting-a-card-navigates-to-games-gameid-to-start-the-game-immediately",
-      "title": "Update the frontend Home page experience so the playable games always appear as thumbnail cards and selecting a card navigates to `/games/$gameId` to start the game immediately.",
+      "id": "feature-update-the-match-word-to-image-gameplay-wrong-answer-feedback-so-that-selecting-an-incorrect-option-shows-the-same-large-red-x-overlay-style-used-in-choose-correct-image-semi-transparent-red-overlay-with-a-large-red-x-icon-centered-covering-only-the-specific-selected-option-block-not-the-entire-row-and-then-automatically-clears-after-a-short-delay-to-allow-unlimited-tries-on-the-same-question",
+      "title": "Update the Match Word to Image gameplay wrong-answer feedback so that selecting an incorrect option shows the same large red X overlay style used in Choose Correct Image (semi-transparent red overlay with a large red X icon centered), covering only the specific selected option block (not the entire row), and then automatically clears after a short delay to allow unlimited tries on the same question.",
       "reqIds": [
-        "REQ-2"
+        "REQ-1"
       ],
       "version": 1
     }
@@ -20,20 +18,13 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Show the game on the home screen as a thumbnail tile; tapping it starts the game immediately.",
+      "summary": "Match Word to Image: on wrong selection show same large red X overlay as Choose Correct Image, covering only the selected option, then fade to allow unlimited tries",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Ensure the backend game catalog is automatically seeded so that the predefined playable games exist and are returned by `getAllGames()`, making them appear on the Home page as selectable thumbnail cards.",
-      "reqIds": [
-        "REQ-1"
-      ],
       "status": "pending"
     }
   ],
-  "projectName": "Rehab Game Hub",
+  "gameProjectType": "2d",
+  "projectName": "Word Image Match",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

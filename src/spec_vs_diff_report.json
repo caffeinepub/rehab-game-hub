@@ -1,69 +1,23 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-18T08:09:51.392Z",
-  "summary": "REQ-1 is only partially addressed: a migration module seeds some games on upgrade, but the seeded IDs do not include the required `match-word-to-image` and there is no clear fresh-install seeding in the provided diff. REQ-2 is partially addressed on the Home page by merging predefined games into the displayed list, but the diff summary does not provide evidence that clicking a thumbnail navigates to `/games/$gameId` (depends on `GameCard`, not shown).",
+  "generatedAt": "2026-02-18T11:21:48.698Z",
+  "summary": "REQ-1 is partially implemented: the game now tracks incorrect selections per-option and auto-resets after 800ms to allow unlimited retries, but the diff does not provide evidence that the required red X overlay UI (matching ChooseCorrectImageGame and covering only the selected option block) was actually implemented in the rendered JSX/CSS.",
   "missing_requirements": [
     {
       "id": "REQ-1",
-      "requirement": "On a fresh install with no manually created games, calling `getAllGames()` returns at least the predefined games needed by the app.",
-      "reason": "The backend `persistentGames` map is initialized empty and the diff does not show any init-time seeding logic that would populate it on a fresh install; seeding appears only via the upgrade migration hook.",
+      "requirement": "Show the same large red X overlay style used in ChooseCorrectImageGame (semi-transparent red overlay with a large centered X icon) on only the incorrectly selected option block in MatchWordToImageGame.",
+      "reason": "The diff snippet shows new state management for 'incorrect' and an 800ms reset, but the truncated MatchWordToImageGame.tsx content does not include the JSX/styling that would render a full-cover semi-transparent red overlay with a centered X icon on only the selected option. Without the render code, this UI requirement cannot be verified from the provided diff summary.",
       "evidence": [
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-1",
-      "requirement": "The predefined games include stable IDs that match the frontend routing and launch logic (e.g., `match-word-to-image` and `choose-correct-image`).",
-      "reason": "The migration seeds `vr-find-x`, `choose-correct-image`, and `choose-correct-image-questions`, but does not seed `match-word-to-image`, which is explicitly one of the stable IDs expected by the frontend/game routing.",
-      "evidence": [
-        "backend/migration.mo",
-        "backend/main.mo",
-        "frontend/src/lib/gameConstants.ts"
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "requirement": "Clicking/tapping a game card navigates to `/games/$gameId` for that game.",
-      "reason": "HomePage renders `GameCard` components, but the diff summary does not include the `GameCard` implementation and therefore does not provide evidence that the card click performs navigation to `/games/$gameId`.",
-      "evidence": [
-        "frontend/src/pages/HomePage.tsx"
+        "frontend/src/components/MatchWordToImageGame.tsx (truncated)"
       ]
     }
   ],
-  "hallucinated_features": [
-    {
-      "description": "Added/seeded a new game `vr-find-x` (VR Find X).",
-      "reason": "The BuildRequest explicitly limits scope to existing predefined games needed by the app and does not request adding a new VR game.",
-      "evidence": [
-        "backend/migration.mo",
-        "backend/main.mo"
-      ]
-    },
-    {
-      "description": "Added/seeded a game `choose-correct-image-questions`.",
-      "reason": "The BuildRequest only references stable playable game IDs like `match-word-to-image` and `choose-correct-image`; introducing a separate `choose-correct-image-questions` game ID is not requested.",
-      "evidence": [
-        "backend/migration.mo",
-        "backend/main.mo"
-      ]
-    },
-    {
-      "description": "Frontend enforces that only predefined game IDs are shown by filtering backend games to `PREDEFINED_GAMES_MAP` inside `mergeGamesWithPredefined`.",
-      "reason": "REQ-2 only requires that the playable predefined games appear as thumbnails; it does not request hiding any other backend-provided games.",
-      "evidence": [
-        "frontend/src/lib/gameConstants.ts"
-      ]
-    }
-  ],
-  "confidence": 0.72,
+  "hallucinated_features": [],
+  "confidence": 0.62,
   "changed_files": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/lib/gameConstants.ts",
-    "frontend/src/pages/GameLaunchPage.tsx",
-    "frontend/src/pages/HomePage.tsx",
+    "frontend/src/components/MatchWordToImageGame.tsx",
     "project_state.json"
   ]
 }

@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { Game, MatchWordToImageQuestion, QuestionId, ExternalBlob } from '@/backend';
-import type { ChooseCorrectImageQuestion } from '@/types/chooseCorrectImage';
+import type { Game, MatchWordToImageQuestion, QuestionId, ExternalBlob, ChooseCorrectImageQuestion } from '@/backend';
 
 export function useGetAllGames() {
   const { actor, isFetching } = useActor();
@@ -150,14 +149,7 @@ export function useGetAllChooseCorrectImageQuestions(gameId: string) {
     queryKey: ['chooseCorrectImageQuestions', gameId],
     queryFn: async () => {
       if (!actor) return [];
-      
-      // Check if the method exists on the actor
-      if (typeof (actor as any).getAllChooseCorrectImageQuestions !== 'function') {
-        console.warn('Backend method getAllChooseCorrectImageQuestions not yet implemented');
-        return [];
-      }
-      
-      return (actor as any).getAllChooseCorrectImageQuestions(gameId);
+      return actor.getAllChooseCorrectImageQuestions(gameId);
     },
     enabled: !!actor && !isFetching && !!gameId,
   });
@@ -181,21 +173,26 @@ export function useCreateChooseCorrectImageQuestion() {
     }) => {
       if (!actor) throw new Error('Actor not initialized');
       
-      // Check if the method exists on the actor
-      if (typeof (actor as any).createChooseCorrectImageQuestion !== 'function') {
-        throw new Error('Backend method createChooseCorrectImageQuestion not yet implemented');
+      if (!word.trim()) {
+        throw new Error('Word cannot be empty');
       }
       
-      if (images.length < 2) {
-        throw new Error('At least 2 images are required');
+      if (images.length !== 3) {
+        throw new Error('Exactly 3 images are required');
       }
       
       if (correctImageIndex < 0 || correctImageIndex >= images.length) {
         throw new Error('Correct image index must be within the range of provided images');
       }
 
-      const questionId = await (actor as any).createChooseCorrectImageQuestion(gameId, word, images, correctImageIndex);
-      return questionId;
+      // Convert number to bigint for backend
+      const createdQuestion = await actor.createChooseCorrectImageQuestion(
+        gameId, 
+        word.trim(), 
+        images, 
+        BigInt(correctImageIndex)
+      );
+      return createdQuestion;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['chooseCorrectImageQuestions', variables.gameId] });

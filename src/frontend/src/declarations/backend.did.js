@@ -21,6 +21,12 @@ export const _CaffeineStorageRefillResult = IDL.Record({
 });
 export const GameId = IDL.Text;
 export const ExternalBlob = IDL.Vec(IDL.Nat8);
+export const ChooseCorrectImageQuestion = IDL.Record({
+  'id' : IDL.Text,
+  'correctImageIndex' : IDL.Nat,
+  'word' : IDL.Text,
+  'images' : IDL.Vec(ExternalBlob),
+});
 export const Option = IDL.Text;
 export const QuestionId = IDL.Text;
 export const Game = IDL.Record({
@@ -67,6 +73,11 @@ export const idlService = IDL.Service({
       [],
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
+  'createChooseCorrectImageQuestion' : IDL.Func(
+      [GameId, IDL.Text, IDL.Vec(ExternalBlob), IDL.Nat],
+      [ChooseCorrectImageQuestion],
+      [],
+    ),
   'createGame' : IDL.Func(
       [
         GameId,
@@ -85,6 +96,11 @@ export const idlService = IDL.Service({
       [GameId, ExternalBlob, IDL.Vec(Option), Option],
       [QuestionId],
       [],
+    ),
+  'getAllChooseCorrectImageQuestions' : IDL.Func(
+      [GameId],
+      [IDL.Vec(ChooseCorrectImageQuestion)],
+      ['query'],
     ),
   'getAllGames' : IDL.Func([], [IDL.Vec(Game)], ['query']),
   'getAllQuestions' : IDL.Func(
@@ -131,6 +147,12 @@ export const idlFactory = ({ IDL }) => {
   });
   const GameId = IDL.Text;
   const ExternalBlob = IDL.Vec(IDL.Nat8);
+  const ChooseCorrectImageQuestion = IDL.Record({
+    'id' : IDL.Text,
+    'correctImageIndex' : IDL.Nat,
+    'word' : IDL.Text,
+    'images' : IDL.Vec(ExternalBlob),
+  });
   const Option = IDL.Text;
   const QuestionId = IDL.Text;
   const Game = IDL.Record({
@@ -177,6 +199,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
+    'createChooseCorrectImageQuestion' : IDL.Func(
+        [GameId, IDL.Text, IDL.Vec(ExternalBlob), IDL.Nat],
+        [ChooseCorrectImageQuestion],
+        [],
+      ),
     'createGame' : IDL.Func(
         [
           GameId,
@@ -195,6 +222,11 @@ export const idlFactory = ({ IDL }) => {
         [GameId, ExternalBlob, IDL.Vec(Option), Option],
         [QuestionId],
         [],
+      ),
+    'getAllChooseCorrectImageQuestions' : IDL.Func(
+        [GameId],
+        [IDL.Vec(ChooseCorrectImageQuestion)],
+        ['query'],
       ),
     'getAllGames' : IDL.Func([], [IDL.Vec(Game)], ['query']),
     'getAllQuestions' : IDL.Func(

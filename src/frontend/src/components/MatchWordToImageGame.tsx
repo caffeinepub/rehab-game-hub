@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { MatchWordToImageQuestion } from '@/backend';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -28,6 +28,7 @@ export default function MatchWordToImageGame({ questions, gameName }: MatchWordT
   const [canProceed, setCanProceed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [gameComplete, setGameComplete] = useState(false);
+  const resetTimeoutRef = useRef<number | null>(null);
 
   // Initialize and shuffle questions on mount
   useEffect(() => {
@@ -71,6 +72,16 @@ export default function MatchWordToImageGame({ questions, gameName }: MatchWordT
     };
   }, [questions]);
 
+  // Cleanup timeout on unmount or question change
+  useEffect(() => {
+    return () => {
+      if (resetTimeoutRef.current !== null) {
+        clearTimeout(resetTimeoutRef.current);
+        resetTimeoutRef.current = null;
+      }
+    };
+  }, [currentQuestionIndex]);
+
   const currentQuestion = shuffledQuestions[currentQuestionIndex];
 
   const handleOptionClick = (index: number) => {
@@ -84,6 +95,12 @@ export default function MatchWordToImageGame({ questions, gameName }: MatchWordT
       setCanProceed(true);
     } else {
       newStates[index] = 'incorrect';
+      // Allow unlimited retries - reset after a short delay
+      resetTimeoutRef.current = window.setTimeout(() => {
+        setSelectedOption(null);
+        setOptionStates(['idle', 'idle', 'idle']);
+        resetTimeoutRef.current = null;
+      }, 800);
     }
 
     setOptionStates(newStates);
@@ -164,26 +181,33 @@ export default function MatchWordToImageGame({ questions, gameName }: MatchWordT
           <h3 className="text-lg font-semibold text-foreground mb-6 text-center">
             Select the correct word for this image:
           </h3>
-          <div className="space-y-3 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
             {currentQuestion.options.map((option, index) => {
               const state = optionStates[index];
-              const isSelected = selectedOption === index;
               
               return (
-                <Button
+                <button
                   key={index}
-                  variant={state === 'idle' ? 'outline' : state === 'correct' ? 'default' : 'destructive'}
-                  size="lg"
-                  className={`w-full text-lg h-auto py-4 justify-between ${
-                    state === 'correct' ? 'bg-green-600 hover:bg-green-700' : ''
-                  } ${state === 'incorrect' ? 'bg-red-600 hover:bg-red-700' : ''}`}
                   onClick={() => handleOptionClick(index)}
                   disabled={canProceed || selectedOption !== null}
+                  className={`relative text-lg h-auto py-4 px-6 rounded-md border-2 transition-all font-medium ${
+                    state === 'correct'
+                      ? 'border-green-600 bg-green-600 text-white ring-4 ring-green-600/20'
+                      : state === 'incorrect'
+                      ? 'border-red-600 ring-4 ring-red-600/20'
+                      : 'border-border bg-background hover:border-primary hover:bg-accent'
+                  } ${canProceed || selectedOption !== null ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                 >
-                  <span>{option}</span>
-                  {state === 'correct' && <CheckCircle2 className="h-6 w-6" />}
-                  {state === 'incorrect' && <XCircle className="h-6 w-6" />}
-                </Button>
+                  <span className="flex items-center justify-center gap-2">
+                    {option}
+                    {state === 'correct' && <CheckCircle2 className="h-6 w-6" />}
+                  </span>
+                  {state === 'incorrect' && (
+                    <div className="absolute inset-0 bg-red-600/20 flex items-center justify-center rounded-md">
+                      <XCircle className="h-16 w-16 text-red-600" />
+                    </div>
+                  )}
+                </button>
               );
             })}
           </div>

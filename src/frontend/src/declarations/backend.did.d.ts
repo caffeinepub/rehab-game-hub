@@ -10,6 +10,12 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface ChooseCorrectImageQuestion {
+  'id' : string,
+  'correctImageIndex' : bigint,
+  'word' : string,
+  'images' : Array<ExternalBlob>,
+}
 export type ExternalBlob = Uint8Array;
 export interface Game {
   'id' : GameId,
@@ -57,6 +63,10 @@ export interface _SERVICE {
     _CaffeineStorageRefillResult
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
+  'createChooseCorrectImageQuestion' : ActorMethod<
+    [GameId, string, Array<ExternalBlob>, bigint],
+    ChooseCorrectImageQuestion
+  >,
   'createGame' : ActorMethod<
     [
       GameId,
@@ -73,6 +83,10 @@ export interface _SERVICE {
   'createQuestion' : ActorMethod<
     [GameId, ExternalBlob, Array<Option>, Option],
     QuestionId
+  >,
+  'getAllChooseCorrectImageQuestions' : ActorMethod<
+    [GameId],
+    Array<ChooseCorrectImageQuestion>
   >,
   'getAllGames' : ActorMethod<[], Array<Game>>,
   'getAllQuestions' : ActorMethod<[GameId], Array<MatchWordToImageQuestion>>,

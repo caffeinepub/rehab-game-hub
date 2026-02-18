@@ -43,7 +43,14 @@ export default function ChooseCorrectImageQuestionEditorDialog({
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImages((prev) => [...prev, { file, preview: reader.result as string }]);
+        setImages((prev) => {
+          // Limit to 3 images total
+          if (prev.length >= 3) {
+            setError('Maximum 3 images allowed');
+            return prev;
+          }
+          return [...prev, { file, preview: reader.result as string }];
+        });
       };
       reader.readAsDataURL(file);
     });
@@ -73,8 +80,8 @@ export default function ChooseCorrectImageQuestionEditorDialog({
       return;
     }
 
-    if (images.length < 2) {
-      setError('Please upload at least 2 images');
+    if (images.length !== 3) {
+      setError('Exactly 3 images are required');
       return;
     }
 
@@ -122,7 +129,7 @@ export default function ChooseCorrectImageQuestionEditorDialog({
         <DialogHeader>
           <DialogTitle>Create New Question</DialogTitle>
           <DialogDescription>
-            Enter a word and upload multiple images. Select which image correctly matches the word.
+            Enter a word and upload exactly 3 images. Select which image correctly matches the word.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -141,11 +148,11 @@ export default function ChooseCorrectImageQuestionEditorDialog({
 
             {/* Image Uploads */}
             <div className="space-y-2">
-              <Label>Images (at least 2) *</Label>
+              <Label>Images (exactly 3) *</Label>
               
               {/* Image Grid */}
               {images.length > 0 && (
-                <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="grid grid-cols-3 gap-3 mb-3">
                   {images.map((img, index) => (
                     <div key={index} className="relative group">
                       <img
@@ -167,38 +174,40 @@ export default function ChooseCorrectImageQuestionEditorDialog({
                 </div>
               )}
 
-              {/* Upload Button */}
-              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors">
-                <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                <Label
-                  htmlFor="images"
-                  className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
-                >
-                  Click to upload images
-                </Label>
-                <Input
-                  id="images"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={handleImageAdd}
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  You can select multiple images at once
-                </p>
-              </div>
+              {/* Upload Button - only show if less than 3 images */}
+              {images.length < 3 && (
+                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors">
+                  <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                  <Label
+                    htmlFor="images"
+                    className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    Click to upload images ({images.length}/3)
+                  </Label>
+                  <Input
+                    id="images"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleImageAdd}
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    You need exactly 3 images
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Correct Image Selection */}
-            {images.length > 0 && (
+            {images.length === 3 && (
               <div className="space-y-2">
                 <Label>Correct Image *</Label>
                 <RadioGroup 
                   value={correctImageIndex.toString()} 
                   onValueChange={(value) => setCorrectImageIndex(parseInt(value))}
                 >
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     {images.map((img, index) => (
                       <div key={index} className="relative">
                         <RadioGroupItem

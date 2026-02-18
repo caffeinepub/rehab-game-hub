@@ -1,31 +1,22 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Playable game thumbnails on Home and immediate launch navigation",
+  "title": "Match Word to Image: wrong-answer red X overlay + auto-reset retries",
   "requirements": [
     {
-      "id": "REQ-2",
-      "summary": "Ensure Home always shows playable game thumbnail cards and selecting one navigates to /games/$gameId to start immediately.",
+      "id": "REQ-1",
+      "summary": "Match ChooseCorrectImageGame’s incorrect-selection overlay (red translucent + large centered X) on the selected option only in MatchWordToImageGame, then auto-reset after ~800ms to allow unlimited retries.",
       "acceptanceCriteria": [
-        "The Home page renders a grid of game thumbnail cards when games are available.",
-        "Clicking/tapping a game card navigates to `/games/$gameId` for that game.",
-        "For the seeded predefined games, navigating from the Home page successfully loads the Game Launch page (i.e., does not show 'Game not found' due to missing backend game entries)."
+        "In MatchWordToImageGame, when the user selects an incorrect option, only that option renders a full-cover overlay matching ChooseCorrectImageGame’s incorrect state (red translucent overlay + large centered X icon).",
+        "The incorrect feedback automatically disappears after ~800ms (same delay as ChooseCorrectImageGame) and the user can immediately try again on the same question without pressing Next.",
+        "After an incorrect selection resets, all options return to the idle visual state and are clickable again.",
+        "Correct-selection behavior remains unchanged: correct option indicates success and enables proceeding to the next question."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/HomePage.tsx",
+          "path": "frontend/src/components/MatchWordToImageGame.tsx",
           "operation": "modify",
-          "description": "Update the Home page to always render a grid of playable game cards by merging backend-returned games with the predefined game definitions from frontend/src/lib/gameConstants.ts (using the stable IDs). Use the existing GameCard component for thumbnail-card rendering and navigation behavior. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/GameLaunchPage.tsx",
-          "operation": "modify",
-          "description": "Adjust the Game Launch page to gracefully handle missing backend game entries for known predefined game IDs (e.g., match-word-to-image, choose-correct-image) by falling back to predefined metadata from frontend/src/lib/gameConstants.ts instead of immediately showing 'Game not found', while keeping question loading behavior and existing routes intact."
-        },
-        {
-          "path": "frontend/src/lib/gameConstants.ts",
-          "operation": "modify",
-          "description": "Ensure predefined game metadata is the single source of truth for stable IDs and thumbnail icon paths (keep using the generated asset paths already referenced) and export any additional helpers needed by Home/GameLaunch to consistently map known game IDs to display data."
+          "description": "Update wrong-answer UI/UX to mirror ChooseCorrectImageGame: render an absolute, full-cover red translucent overlay with a large centered XCircle over only the clicked option block (not the full row), and add an ~800ms timeout to clear incorrect state (selectedOption + optionStates) so options become clickable again for unlimited retries; keep correct-selection flow unchanged and ensure any pending timeout is cleaned up on unmount/question change to avoid state updates after navigation."
         }
       ]
     }
