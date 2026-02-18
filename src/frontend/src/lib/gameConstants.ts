@@ -1,5 +1,8 @@
-// Stable predefined game ID for Match Word to Image
+import type { Game } from '@/backend';
+
+// Stable predefined game IDs
 export const MATCH_WORD_TO_IMAGE_GAME_ID = 'match-word-to-image';
+export const CHOOSE_CORRECT_IMAGE_GAME_ID = 'choose-correct-image';
 
 // Game metadata
 export const MATCH_WORD_TO_IMAGE_GAME = {
@@ -12,3 +15,76 @@ export const MATCH_WORD_TO_IMAGE_GAME = {
   secondaryColor: '#9CA3AF',
   tags: ['cognitive', 'memory', 'word recognition'],
 } as const;
+
+export const CHOOSE_CORRECT_IMAGE_GAME = {
+  id: CHOOSE_CORRECT_IMAGE_GAME_ID,
+  name: 'Choose Correct Image',
+  description: 'See a word and choose the matching image from multiple options. Improve visual recognition and word association skills.',
+  icon: '/assets/generated/reverse-match-word-to-image-thumbnail.dim_800x600.png',
+  badges: [],
+  primaryColor: '#6B7280',
+  secondaryColor: '#9CA3AF',
+  tags: ['cognitive', 'visual', 'word association'],
+} as const;
+
+// Map of all predefined games by ID
+export const PREDEFINED_GAMES_MAP: Record<string, Game> = {
+  [MATCH_WORD_TO_IMAGE_GAME_ID]: {
+    ...MATCH_WORD_TO_IMAGE_GAME,
+    badges: [...MATCH_WORD_TO_IMAGE_GAME.badges],
+    tags: [...MATCH_WORD_TO_IMAGE_GAME.tags],
+  },
+  [CHOOSE_CORRECT_IMAGE_GAME_ID]: {
+    ...CHOOSE_CORRECT_IMAGE_GAME,
+    badges: [...CHOOSE_CORRECT_IMAGE_GAME.badges],
+    tags: [...CHOOSE_CORRECT_IMAGE_GAME.tags],
+  },
+};
+
+// Array of all predefined games
+export const PREDEFINED_GAMES: Game[] = [
+  {
+    ...MATCH_WORD_TO_IMAGE_GAME,
+    badges: [...MATCH_WORD_TO_IMAGE_GAME.badges],
+    tags: [...MATCH_WORD_TO_IMAGE_GAME.tags],
+  },
+  {
+    ...CHOOSE_CORRECT_IMAGE_GAME,
+    badges: [...CHOOSE_CORRECT_IMAGE_GAME.badges],
+    tags: [...CHOOSE_CORRECT_IMAGE_GAME.tags],
+  },
+];
+
+/**
+ * Merges backend games with predefined game metadata.
+ * Ensures all predefined games are always available, even if not in backend.
+ * Backend games override predefined metadata if they share the same ID.
+ */
+export function mergeGamesWithPredefined(backendGames: Game[]): Game[] {
+  const gameMap = new Map<string, Game>();
+  
+  // First, add all predefined games
+  PREDEFINED_GAMES.forEach(game => {
+    gameMap.set(game.id, game);
+  });
+  
+  // Then, overlay backend games (they override predefined if same ID)
+  backendGames.forEach(game => {
+    // Only include backend games that match our predefined IDs
+    if (PREDEFINED_GAMES_MAP[game.id]) {
+      gameMap.set(game.id, game);
+    }
+  });
+  
+  return Array.from(gameMap.values());
+}
+
+/**
+ * Gets game metadata by ID, falling back to predefined if not found in backend.
+ */
+export function getGameMetadata(gameId: string, backendGame?: Game | null): Game | null {
+  if (backendGame) {
+    return backendGame;
+  }
+  return PREDEFINED_GAMES_MAP[gameId] || null;
+}

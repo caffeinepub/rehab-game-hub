@@ -1,31 +1,31 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Ensure predefined Match Word to Image appears on Home and opens /games/$gameId",
+  "title": "Playable game thumbnails on Home and immediate launch navigation",
   "requirements": [
     {
-      "id": "REQ-16",
-      "summary": "Fix Home page loading behavior and game grid rendering so Match Word to Image appears as a clickable thumbnail and navigates to /games/match-word-to-image.",
+      "id": "REQ-2",
+      "summary": "Ensure Home always shows playable game thumbnail cards and selecting one navigates to /games/$gameId to start immediately.",
       "acceptanceCriteria": [
-        "When the app loads, Home shows a thumbnail card for \"Match Word to Image\" when the backend returns it from getAllGames().",
-        "Clicking the \"Match Word to Image\" card navigates to /games/match-word-to-image and renders the existing Game Launch experience for that game.",
-        "If getAllGames() is loading or errors, Home continues to show the existing English loading and error states (no regressions)."
+        "The Home page renders a grid of game thumbnail cards when games are available.",
+        "Clicking/tapping a game card navigates to `/games/$gameId` for that game.",
+        "For the seeded predefined games, navigating from the Home page successfully loads the Game Launch page (i.e., does not show 'Game not found' due to missing backend game entries)."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/HomePage.tsx",
           "operation": "modify",
-          "description": "Ensure Home treats backend actor initialization as part of the loading state (so it does not show the empty \"No games available yet\" state before getAllGames() can run). Use the existing loading/error UI strings and keep the same end-to-end flow rendering <GameCard> for returned games."
+          "description": "Update the Home page to always render a grid of playable game cards by merging backend-returned games with the predefined game definitions from frontend/src/lib/gameConstants.ts (using the stable IDs). Use the existing GameCard component for thumbnail-card rendering and navigation behavior. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/public/assets/generated/game-thumbnail-placeholder.dim_800x600.png",
-          "operation": "create",
-          "description": "Add the generated placeholder thumbnail asset at this exact path so Home/GameCard can reliably render a thumbnail when a game icon is missing or fails to load."
+          "path": "frontend/src/pages/GameLaunchPage.tsx",
+          "operation": "modify",
+          "description": "Adjust the Game Launch page to gracefully handle missing backend game entries for known predefined game IDs (e.g., match-word-to-image, choose-correct-image) by falling back to predefined metadata from frontend/src/lib/gameConstants.ts instead of immediately showing 'Game not found', while keeping question loading behavior and existing routes intact."
         },
         {
-          "path": "frontend/public/assets/generated/rehab-game-hub-logo.dim_512x512.png",
-          "operation": "create",
-          "description": "Add the generated logo asset at this exact path so the App layout header logo reference resolves correctly across environments."
+          "path": "frontend/src/lib/gameConstants.ts",
+          "operation": "modify",
+          "description": "Ensure predefined game metadata is the single source of truth for stable IDs and thumbnail icon paths (keep using the generated asset paths already referenced) and export any additional helpers needed by Home/GameLaunch to consistently map known game IDs to display data."
         }
       ]
     }

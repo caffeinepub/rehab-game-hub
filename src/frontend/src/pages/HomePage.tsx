@@ -2,10 +2,11 @@ import { useGetAllGames } from '@/hooks/useQueries';
 import { useActor } from '@/hooks/useActor';
 import GameCard from '@/components/GameCard';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { mergeGamesWithPredefined } from '@/lib/gameConstants';
 
 export default function HomePage() {
   const { isFetching: isActorFetching } = useActor();
-  const { data: games, isLoading, error } = useGetAllGames();
+  const { data: backendGames, isLoading, error } = useGetAllGames();
 
   // Show loading state while actor is initializing OR while games are loading
   if (isActorFetching || isLoading) {
@@ -31,6 +32,9 @@ export default function HomePage() {
     );
   }
 
+  // Merge backend games with predefined games to ensure all playable games appear
+  const games = mergeGamesWithPredefined(backendGames || []);
+
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="mb-8">
@@ -40,7 +44,7 @@ export default function HomePage() {
         </p>
       </div>
 
-      {!games || games.length === 0 ? (
+      {games.length === 0 ? (
         <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 bg-muted/30 rounded-lg border-2 border-dashed border-border p-12">
           <div className="text-center max-w-md">
             <h3 className="text-xl font-semibold text-foreground mb-2">No games available yet</h3>

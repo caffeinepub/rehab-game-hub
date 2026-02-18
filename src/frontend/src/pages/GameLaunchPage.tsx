@@ -1,17 +1,31 @@
 import { useParams, Link } from '@tanstack/react-router';
-import { useGetGameById, useGetAllQuestions } from '@/hooks/useQueries';
+import { useGetGameById, useGetAllQuestions, useGetAllChooseCorrectImageQuestions } from '@/hooks/useQueries';
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
-import { MATCH_WORD_TO_IMAGE_GAME_ID } from '@/lib/gameConstants';
+import { MATCH_WORD_TO_IMAGE_GAME_ID, CHOOSE_CORRECT_IMAGE_GAME_ID, getGameMetadata } from '@/lib/gameConstants';
 import MatchWordToImageGame from '@/components/MatchWordToImageGame';
+import ChooseCorrectImageGame from '@/components/ChooseCorrectImageGame';
 
 export default function GameLaunchPage() {
   const { gameId } = useParams({ from: '/games/$gameId' });
-  const { data: game, isLoading: gameLoading, error: gameError } = useGetGameById(gameId);
-  const { data: questions, isLoading: questionsLoading, error: questionsError } = useGetAllQuestions(gameId);
+  const { data: backendGame, isLoading: gameLoading, error: gameError } = useGetGameById(gameId);
+  
+  // Load questions based on game type
+  const { data: matchWordQuestions, isLoading: matchWordLoading, error: matchWordError } = useGetAllQuestions(
+    gameId === MATCH_WORD_TO_IMAGE_GAME_ID ? gameId : ''
+  );
+  const { data: chooseImageQuestions, isLoading: chooseImageLoading, error: chooseImageError } = useGetAllChooseCorrectImageQuestions(
+    gameId === CHOOSE_CORRECT_IMAGE_GAME_ID ? gameId : ''
+  );
 
-  const isLoading = gameLoading || questionsLoading;
-  const error = gameError || questionsError;
+  const isMatchWordToImageGame = gameId === MATCH_WORD_TO_IMAGE_GAME_ID;
+  const isChooseCorrectImageGame = gameId === CHOOSE_CORRECT_IMAGE_GAME_ID;
+
+  const isLoading = gameLoading || (isMatchWordToImageGame && matchWordLoading) || (isChooseCorrectImageGame && chooseImageLoading);
+  const error = (isMatchWordToImageGame && matchWordError) || (isChooseCorrectImageGame && chooseImageError);
+
+  // Get game metadata - fall back to predefined if backend doesn't have it
+  const game = getGameMetadata(gameId, backendGame);
 
   if (isLoading) {
     return (
@@ -24,6 +38,7 @@ export default function GameLaunchPage() {
     );
   }
 
+  // Only show error if we don't have predefined metadata for this game
   if (error || !game) {
     return (
       <div className="container mx-auto px-4 py-12">
@@ -31,7 +46,7 @@ export default function GameLaunchPage() {
           <AlertCircle className="h-12 w-12 text-destructive" />
           <p className="text-destructive font-medium">Game not found</p>
           <p className="text-sm text-muted-foreground">
-            {error?.message || 'The requested game could not be loaded'}
+            {(error && 'message' in error) ? error.message : 'The requested game could not be loaded'}
           </p>
           <Link to="/">
             <Button variant="outline" className="gap-2 mt-4">
@@ -44,10 +59,8 @@ export default function GameLaunchPage() {
     );
   }
 
-  // Check if this is the Match Word to Image game
-  const isMatchWordToImageGame = gameId === MATCH_WORD_TO_IMAGE_GAME_ID;
-
-  if (isMatchWordToImageGame && questions && questions.length > 0) {
+  // Render Match Word to Image game
+  if (isMatchWordToImageGame && matchWordQuestions && matchWordQuestions.length > 0) {
     return (
       <div className="container mx-auto px-4 py-12">
         <Link to="/">
@@ -56,13 +69,29 @@ export default function GameLaunchPage() {
             Back to Games
           </Button>
         </Link>
-        <MatchWordToImageGame questions={questions} gameName={game.name} />
+        <MatchWordToImageGame questions={matchWordQuestions} gameName={game.name} />
       </div>
     );
   }
 
-  // Show empty state if no questions
-  if (isMatchWordToImageGame && (!questions || questions.length === 0)) {
+  // Render Choose Correct Image game
+  if (isChooseCorrectImageGame && chooseImageQuestions && chooseImageQuestions.length > 0) {
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <Link to="/">
+          <Button variant="ghost" className="gap-2 mb-6">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Games
+          </Button>
+        </Link>
+        <ChooseCorrectImageGame questions={chooseImageQuestions} gameName={game.name} />
+      </div>
+    );
+  }
+
+  // Show empty state if no questions for known games
+  if ((isMatchWordToImageGame && (!matchWordQuestions || matchWordQuestions.length === 0)) ||
+      (isChooseCorrectImageGame && (!chooseImageQuestions || chooseImageQuestions.length === 0))) {
     return (
       <div className="container mx-auto px-4 py-12">
         <Link to="/">

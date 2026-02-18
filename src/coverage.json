@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T21:25:06.520Z",
+  "generatedAt": "2026-02-18T08:09:51.395Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -11,23 +11,25 @@
     "implemented": 1,
     "items": [
       {
-        "id": "REQ-15",
-        "summary": "Ensure the backend game catalog is automatically seeded with the predefined games at canister initialization and after upgrades so that at minimum the predefined game \"Match Word to Image\" (ID: \"match-word-to-image\") always exists and is returned by getAllGames().",
+        "id": "REQ-1",
+        "summary": "Ensure the backend game catalog is automatically seeded so that the predefined playable games exist and are returned by `getAllGames()`, making them appear on the Home page as selectable thumbnail cards.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-16",
-        "summary": "Fix the Home page end-to-end behavior so the predefined \"Match Word to Image\" game appears as a playable thumbnail card in the Home game grid and can be opened to the existing route /games/$gameId.",
+        "id": "REQ-2",
+        "summary": "Update the frontend Home page experience so the playable games always appear as thumbnail cards and selecting a card navigates to `/games/$gameId` to start the game immediately.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/pages/HomePage.tsx",
-          "frontend/public/assets/generated/game-thumbnail-placeholder.dim_800x600.png",
-          "frontend/public/assets/generated/rehab-game-hub-logo.dim_512x512.png"
+          "frontend/src/pages/GameLaunchPage.tsx",
+          "frontend/src/lib/gameConstants.ts"
         ],
         "matchedFiles": [
-          "frontend/src/pages/HomePage.tsx"
+          "frontend/src/pages/HomePage.tsx",
+          "frontend/src/pages/GameLaunchPage.tsx",
+          "frontend/src/lib/gameConstants.ts"
         ]
       }
     ]
@@ -39,6 +41,9 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/src/backend.d.ts",
+    "frontend/src/lib/gameConstants.ts",
+    "frontend/src/pages/GameLaunchPage.tsx",
     "frontend/src/pages/HomePage.tsx",
     "project_state.json",
     "scratch/component-selection.json",

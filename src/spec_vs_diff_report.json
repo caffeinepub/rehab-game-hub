@@ -1,38 +1,31 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T21:25:06.518Z",
-  "summary": "Backend adds a migration step to re-add the predefined game if missing during upgrade, and HomePage now waits for actor initialization and lists returned games as cards. However, automatic seeding on fresh deploy is not evidenced, and the Home click-through route behavior is not shown in the diff summary. Home loading/error copy appears changed, risking regression against the stated acceptance criteria.",
+  "generatedAt": "2026-02-18T08:09:51.392Z",
+  "summary": "REQ-1 is only partially addressed: a migration module seeds some games on upgrade, but the seeded IDs do not include the required `match-word-to-image` and there is no clear fresh-install seeding in the provided diff. REQ-2 is partially addressed on the Home page by merging predefined games into the displayed list, but the diff summary does not provide evidence that clicking a thumbnail navigates to `/games/$gameId` (depends on `GameCard`, not shown).",
   "missing_requirements": [
     {
-      "id": "REQ-15",
-      "requirement": "On a fresh deploy with no prior state, getAllGames() returns an array that includes a game with id \"match-word-to-image\" (automatic seeding at canister initialization).",
-      "reason": "The diff only shows upgrade-time seeding via migration.run(old). There is no explicit initialization-time seeding of persistentGames in backend/main.mo, and persistentGames is initialized as empty.",
+      "id": "REQ-1",
+      "requirement": "On a fresh install with no manually created games, calling `getAllGames()` returns at least the predefined games needed by the app.",
+      "reason": "The backend `persistentGames` map is initialized empty and the diff does not show any init-time seeding logic that would populate it on a fresh install; seeding appears only via the upgrade migration hook.",
       "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-1",
+      "requirement": "The predefined games include stable IDs that match the frontend routing and launch logic (e.g., `match-word-to-image` and `choose-correct-image`).",
+      "reason": "The migration seeds `vr-find-x`, `choose-correct-image`, and `choose-correct-image-questions`, but does not seed `match-word-to-image`, which is explicitly one of the stable IDs expected by the frontend/game routing.",
+      "evidence": [
+        "backend/migration.mo",
         "backend/main.mo",
-        "backend/migration.mo"
+        "frontend/src/lib/gameConstants.ts"
       ]
     },
     {
-      "id": "REQ-15",
-      "requirement": "No user-facing text is introduced on the backend.",
-      "reason": "The migration introduces new English name/description strings for the predefined game; these fields are typically displayed in the UI and thus constitute user-facing text being added on the backend.",
-      "evidence": [
-        "backend/migration.mo"
-      ]
-    },
-    {
-      "id": "REQ-16",
-      "requirement": "Clicking the \"Match Word to Image\" card navigates to /games/match-word-to-image and renders the existing Game Launch experience for that game.",
-      "reason": "HomePage maps games to <GameCard>, but the diff summary does not include any evidence that GameCard (or HomePage) performs navigation to /games/$gameId on click.",
-      "evidence": [
-        "frontend/src/pages/HomePage.tsx"
-      ]
-    },
-    {
-      "id": "REQ-16",
-      "requirement": "If getAllGames() is loading or errors, Home continues to show the existing English loading and error states (no regressions).",
-      "reason": "HomePage’s loading/error UI and copy shown in the diff (e.g., \"Loading games...\", \"Failed to load games\") may differ from prior existing states; the diff provides no evidence that these are unchanged.",
+      "id": "REQ-2",
+      "requirement": "Clicking/tapping a game card navigates to `/games/$gameId` for that game.",
+      "reason": "HomePage renders `GameCard` components, but the diff summary does not include the `GameCard` implementation and therefore does not provide evidence that the card click performs navigation to `/games/$gameId`.",
       "evidence": [
         "frontend/src/pages/HomePage.tsx"
       ]
@@ -40,18 +33,36 @@
   ],
   "hallucinated_features": [
     {
-      "description": "Added a new backend migration module (backend/migration.mo) that seeds the predefined game with specific metadata (colors, tags, icon id, description).",
-      "reason": "REQ-15 requires ensuring the game exists after init/upgrade, but does not request adding a new migration file or adding specific extra metadata values beyond ensuring presence.",
+      "description": "Added/seeded a new game `vr-find-x` (VR Find X).",
+      "reason": "The BuildRequest explicitly limits scope to existing predefined games needed by the app and does not request adding a new VR game.",
       "evidence": [
-        "backend/migration.mo"
+        "backend/migration.mo",
+        "backend/main.mo"
+      ]
+    },
+    {
+      "description": "Added/seeded a game `choose-correct-image-questions`.",
+      "reason": "The BuildRequest only references stable playable game IDs like `match-word-to-image` and `choose-correct-image`; introducing a separate `choose-correct-image-questions` game ID is not requested.",
+      "evidence": [
+        "backend/migration.mo",
+        "backend/main.mo"
+      ]
+    },
+    {
+      "description": "Frontend enforces that only predefined game IDs are shown by filtering backend games to `PREDEFINED_GAMES_MAP` inside `mergeGamesWithPredefined`.",
+      "reason": "REQ-2 only requires that the playable predefined games appear as thumbnails; it does not request hiding any other backend-provided games.",
+      "evidence": [
+        "frontend/src/lib/gameConstants.ts"
       ]
     }
   ],
-  "confidence": 0.66,
+  "confidence": 0.72,
   "changed_files": [
     "backend/main.mo",
     "backend/migration.mo",
     "frontend-file-summaries.txt",
+    "frontend/src/lib/gameConstants.ts",
+    "frontend/src/pages/GameLaunchPage.tsx",
     "frontend/src/pages/HomePage.tsx",
     "project_state.json"
   ]

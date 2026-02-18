@@ -1,112 +1,18 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 7,
-  "summary": "Rehab game platform scaffold expanded to include the first predefined game type, \"Match Word to Image,\" with Game Manager tooling to author its questions (image + 3 word options + correct answer) and a gameplay experience that randomizes questions/options and requires correct selection to proceed.",
-  "architectural_notes": [
-    "Platform will host multiple simple rehab games primarily composed of photos, questions, and answers",
-    "\"Match Word to Image\" is a single predefined game (no in-app creation of new games; only its question content is managed).",
-    "Per-question images are stored directly in the canister as blobs (not external URLs).",
-    "Gameplay should randomize question order and answer option order per session.",
-    "Home page should list all predefined games present in the backend game catalog (including \"Match Word to Image\"); these predefined games are created/configured via prompts, not via in-app creation."
-  ],
+  "projectStateVersion": 3,
+  "summary": "Game app with a home screen that lists playable games as thumbnails; selecting a thumbnail starts the game immediately.",
+  "architectural_notes": [],
   "known_issues": [
-    "Predefined game \"Match Word to Image\" is not appearing on the Home page as a playable thumbnail."
+    "Game does not currently appear on the home screen as a playable option."
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-create-a-home-page-that-displays-a-grid-of-rehab-games-as-clickable-thumbnail-cards-and-allow-opening-a-game-from-its-thumbnail-use-a-placeholder-game-detail-launch-screen-for-now",
-      "title": "Create a Home page that displays a grid of rehab games as clickable thumbnail cards, and allow opening a game from its thumbnail (use a placeholder game detail/launch screen for now).",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-create-a-game-manager-page-that-lists-the-same-games-and-provides-basic-management-actions-suitable-for-future-expansion-create-edit-metadata-delete",
-      "title": "Create a Game Manager page that lists the same games and provides basic management actions suitable for future expansion (create, edit metadata, delete).",
+      "id": "feature-update-the-frontend-home-page-experience-so-the-playable-games-always-appear-as-thumbnail-cards-and-selecting-a-card-navigates-to-games-gameid-to-start-the-game-immediately",
+      "title": "Update the frontend Home page experience so the playable games always appear as thumbnail cards and selecting a card navigates to `/games/$gameId` to start the game immediately.",
       "reqIds": [
         "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-connect-frontend-pages-to-the-backend-game-catalog-using-react-query-including-loading-states-and-error-states-in-english",
-      "title": "Connect frontend pages to the backend game catalog using React Query, including loading states and error states in English.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-simple-placeholder-game-launch-page-route-to-represent-opening-a-game-no-actual-gameplay-is-required-yet",
-      "title": "Add a simple placeholder 'Game Launch' page/route to represent opening a game; no actual gameplay is required yet.",
-      "reqIds": [
-        "REQ-5"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-apply-a-coherent-visual-theme-across-the-app-layout-typography-colors-spacing-appropriate-for-a-rehab-therapy-adjacent-product-ensuring-consistent-styling-across-home-game-manager-and-game-launch-pages",
-      "title": "Apply a coherent visual theme across the app (layout, typography, colors, spacing) appropriate for a rehab/therapy-adjacent product, ensuring consistent styling across Home, Game Manager, and Game Launch pages.",
-      "reqIds": [
-        "REQ-6"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-generated-static-image-assets-logo-and-placeholder-thumbnail-into-the-frontend-public-assets-and-use-them-as-defaults-when-a-game-has-no-custom-thumbnail-url",
-      "title": "Add generated static image assets (logo and placeholder thumbnail) into the frontend public assets and use them as defaults when a game has no custom thumbnail URL.",
-      "reqIds": [
-        "REQ-7"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-remove-or-disable-in-app-game-creation-and-game-metadata-editing-in-the-ui-so-games-are-not-created-within-the-app-the-game-manager-must-not-show-add-game-create-affordances-and-must-not-allow-creating-additional-games",
-      "title": "Remove or disable in-app game creation and game metadata editing in the UI so games are not created within the app; the Game Manager must not show \"Add Game\" / \"Create\" affordances and must not allow creating additional games.",
-      "reqIds": [
-        "REQ-9"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-game-manager-to-support-authoring-match-word-to-image-questions-create-edit-delete-questions-upload-an-image-per-question-enter-3-word-options-and-select-which-option-is-correct",
-      "title": "Update the Game Manager to support authoring \"Match Word to Image\" questions: create/edit/delete questions, upload an image per question, enter 3 word options, and select which option is correct.",
-      "reqIds": [
-        "REQ-11"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-gameplay-for-match-word-to-image-on-the-existing-game-launch-route-display-the-question-image-large-and-centered-show-the-3-word-options-at-the-bottom-indicate-incorrect-selections-and-only-allow-advancing-to-the-next-question-after-selecting-the-correct-option",
-      "title": "Implement gameplay for \"Match Word to Image\" on the existing Game Launch route: display the question image large and centered, show the 3 word options at the bottom, indicate incorrect selections, and only allow advancing to the next question after selecting the correct option.",
-      "reqIds": [
-        "REQ-12"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-randomize-gameplay-each-session-by-shuffling-question-order-and-shuffling-the-order-of-the-3-answer-options-for-each-question",
-      "title": "Randomize gameplay each session by shuffling question order and shuffling the order of the 3 answer options for each question.",
-      "reqIds": [
-        "REQ-13"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-frontend-react-query-hooks-and-backend-endpoints-necessary-to-fetch-questions-and-question-images-for-the-predefined-game-efficiently-with-loading-and-error-states-in-english",
-      "title": "Add frontend React Query hooks and backend endpoints necessary to fetch questions and question images for the predefined game efficiently, with loading and error states in English.",
-      "reqIds": [
-        "REQ-14"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-fix-the-home-page-end-to-end-behavior-so-the-predefined-match-word-to-image-game-appears-as-a-playable-thumbnail-card-in-the-home-game-grid-and-can-be-opened-to-the-existing-route-games-gameid",
-      "title": "Fix the Home page end-to-end behavior so the predefined \"Match Word to Image\" game appears as a playable thumbnail card in the Home game grid and can be opened to the existing route /games/$gameId.",
-      "reqIds": [
-        "REQ-16"
       ],
       "version": 1
     }
@@ -114,68 +20,19 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Home page that displays game thumbnails and allows opening games from the thumbnails",
+      "summary": "Show the game on the home screen as a thumbnail tile; tapping it starts the game immediately.",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Game Manager page that lists created games and provides management actions for them",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Implement backend persistence for a simple 'Game' catalog so that Home and Game Manager load from and write to the same data source.",
+      "summary": "Ensure the backend game catalog is automatically seeded so that the predefined playable games exist and are returned by `getAllGames()`, making them appear on the Home page as selectable thumbnail cards.",
       "reqIds": [
-        "REQ-3"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Add a single predefined game: \"Match Word to Image\" to the catalog (not user-creatable in-app)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Game Manager: author \"Match Word to Image\" questions with image upload (stored as canister blobs), 3 word options, and correct option selection",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "Gameplay: display large image with 3 word options; indicate wrong selections; only allow advancing on correct; randomize question order and option order",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Add a single predefined game entry to the backend game catalog with the name \"Match Word to Image\" so it always appears on the Home page and can be launched via the existing /games/$gameId route.",
-      "reqIds": [
-        "REQ-8"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-11",
-      "summary": "Extend the backend to persist \"Match Word to Image\" questions, where each question has: an image stored as a blob in the canister, exactly 3 word options, and one designated correct option.",
-      "reqIds": [
-        "REQ-10"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-12",
-      "summary": "Ensure the backend game catalog is automatically seeded with the predefined games at canister initialization and after upgrades so that at minimum the predefined game \"Match Word to Image\" (ID: \"match-word-to-image\") always exists and is returned by getAllGames().",
-      "reqIds": [
-        "REQ-15"
+        "REQ-1"
       ],
       "status": "pending"
     }
   ],
-  "gameProjectType": "none",
   "projectName": "Rehab Game Hub",
   "clarification_mode": "instant",
   "clarification_rounds": 0

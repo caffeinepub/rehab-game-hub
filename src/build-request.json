@@ -1,75 +1,65 @@
 {
   "kind": "build_request",
-  "title": "Ensure predefined games (Match Word to Image) always appear on Home",
+  "title": "Ensure games appear as playable thumbnails on Home screen and launch immediately",
   "projectName": "Rehab Game Hub",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-15",
-      "text": "Ensure the backend game catalog is automatically seeded with the predefined games at canister initialization and after upgrades so that at minimum the predefined game \"Match Word to Image\" (ID: \"match-word-to-image\") always exists and is returned by getAllGames().",
+      "id": "REQ-1",
+      "text": "Ensure the backend game catalog is automatically seeded so that the predefined playable games exist and are returned by `getAllGames()`, making them appear on the Home page as selectable thumbnail cards.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-5",
-          "msg-6"
+          "msg-1",
+          "msg-2",
+          "msg-3"
         ],
         "quotes": [
-          "not at all",
-          "it should show the predefined games i create here",
+          "the games does not appear on the home screen as options to be played.",
+          "1. yes\n2. thumbnails\n3. start",
           "build"
         ]
       },
       "acceptanceCriteria": [
-        "On a fresh deploy with no prior state, calling getAllGames() returns an array that includes a game with id \"match-word-to-image\".",
-        "After an upgrade, if the game with id \"match-word-to-image\" was missing, it is re-added automatically without requiring any frontend action.",
-        "No user-facing text is introduced on the backend."
+        "On a fresh install with no manually created games, calling `getAllGames()` returns at least the predefined games needed by the app.",
+        "The predefined games include stable IDs that match the frontend routing and launch logic (e.g., `match-word-to-image` and `choose-correct-image`).",
+        "After an upgrade, the predefined games still exist (or are re-seeded if missing) and appear on the Home page without any manual setup."
       ]
     },
     {
-      "id": "REQ-16",
-      "text": "Fix the Home page end-to-end behavior so the predefined \"Match Word to Image\" game appears as a playable thumbnail card in the Home game grid and can be opened to the existing route /games/$gameId.",
+      "id": "REQ-2",
+      "text": "Update the frontend Home page experience so the playable games always appear as thumbnail cards and selecting a card navigates to `/games/$gameId` to start the game immediately.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1",
-          "msg-4"
+          "msg-2"
         ],
         "quotes": [
-          "the game doesnt appear under home in order to start playing it (games created under manager should auto appear as thumbnails to play on home)",
-          "it should show the predefined games i create here"
+          "the games does not appear on the home screen as options to be played.",
+          "1. yes\n2. thumbnails\n3. start"
         ]
       },
       "acceptanceCriteria": [
-        "When the app loads, Home shows a thumbnail card for \"Match Word to Image\" when the backend returns it from getAllGames().",
-        "Clicking the \"Match Word to Image\" card navigates to /games/match-word-to-image and renders the existing Game Launch experience for that game.",
-        "If getAllGames() is loading or errors, Home continues to show the existing English loading and error states (no regressions)."
+        "The Home page renders a grid of game thumbnail cards when games are available.",
+        "Clicking/tapping a game card navigates to `/games/$gameId` for that game.",
+        "For the seeded predefined games, navigating from the Home page successfully loads the Game Launch page (i.e., does not show 'Game not found' due to missing backend game entries)."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor (all logic in backend/main.mo).",
-    "Only add/modify backend/migration.mo if required for state upgrade safety under the project’s conditional migration policy.",
-    "Do not edit any frontend files under frontend/src/components/ui or any paths listed in frontend.immutablePaths.",
-    "Use English for any user-facing text."
+    "Backend must remain a single-actor Motoko canister; keep all Motoko logic in `backend/main.mo`.",
+    "Do not edit any files under `frontend/src/components/ui` (Shadcn components are read-only).",
+    "Do not edit immutable frontend hook paths: `frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useInternetIdentity.tsx`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`.",
+    "All user-facing text must be in English."
   ],
   "nonGoals": [
-    "Re-enabling in-app creation of new games from the UI (Game Manager must not become a place to create new games).",
-    "Adding new gameplay types beyond the existing \"Match Word to Image\" flow.",
-    "Introducing any external database or third-party backend services."
+    "Implementing new game types beyond making existing predefined games appear on the Home page.",
+    "Adding third-party authentication providers (only Internet Identity is supported).",
+    "Adding real-time communication features (e.g., WebSockets)."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import type { Game, MatchWordToImageQuestion, QuestionId, ExternalBlob } from '@/backend';
+import type { ChooseCorrectImageQuestion } from '@/types/chooseCorrectImage';
 
 export function useGetAllGames() {
   const { actor, isFetching } = useActor();
@@ -136,6 +137,68 @@ export function useCreateQuestion() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['questions', variables.gameId] });
+    },
+  });
+}
+
+// Question CRUD hooks for Choose Correct Image
+
+export function useGetAllChooseCorrectImageQuestions(gameId: string) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<ChooseCorrectImageQuestion[]>({
+    queryKey: ['chooseCorrectImageQuestions', gameId],
+    queryFn: async () => {
+      if (!actor) return [];
+      
+      // Check if the method exists on the actor
+      if (typeof (actor as any).getAllChooseCorrectImageQuestions !== 'function') {
+        console.warn('Backend method getAllChooseCorrectImageQuestions not yet implemented');
+        return [];
+      }
+      
+      return (actor as any).getAllChooseCorrectImageQuestions(gameId);
+    },
+    enabled: !!actor && !isFetching && !!gameId,
+  });
+}
+
+export function useCreateChooseCorrectImageQuestion() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      gameId,
+      word,
+      images,
+      correctImageIndex,
+    }: {
+      gameId: string;
+      word: string;
+      images: ExternalBlob[];
+      correctImageIndex: number;
+    }) => {
+      if (!actor) throw new Error('Actor not initialized');
+      
+      // Check if the method exists on the actor
+      if (typeof (actor as any).createChooseCorrectImageQuestion !== 'function') {
+        throw new Error('Backend method createChooseCorrectImageQuestion not yet implemented');
+      }
+      
+      if (images.length < 2) {
+        throw new Error('At least 2 images are required');
+      }
+      
+      if (correctImageIndex < 0 || correctImageIndex >= images.length) {
+        throw new Error('Correct image index must be within the range of provided images');
+      }
+
+      const questionId = await (actor as any).createChooseCorrectImageQuestion(gameId, word, images, correctImageIndex);
+      return questionId;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['chooseCorrectImageQuestions', variables.gameId] });
     },
   });
 }

@@ -4,15 +4,18 @@ import Text "mo:core/Text";
 import List "mo:core/List";
 import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
+import Migration "migration";
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
-import Migration "migration";
 
 (with migration = Migration.run)
 actor {
   include MixinStorage();
 
   type GameId = Text;
+  let VR_GAME_ID = "vr-find-x";
+  let CHOOSE_CORRECT_IMAGE_GAME_ID = "choose-correct-image";
+  let CORRECT_IMAGE_QUESTIONS = "choose-correct-image-questions";
 
   public type Game = {
     id : GameId;
