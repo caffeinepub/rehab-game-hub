@@ -12,11 +12,20 @@ import {
   getGameMetadata,
 } from "@/lib/gameConstants";
 import { Link, useParams } from "@tanstack/react-router";
-import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Loader2,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function GameLaunchPage() {
   const { gameId } = useParams({ from: "/games/$gameId" });
   const { data: backendGame, isLoading: gameLoading } = useGetGameById(gameId);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const gameContainerRef = useRef<HTMLDivElement>(null);
 
   // Load questions based on game type
   const {
@@ -45,6 +54,24 @@ export default function GameLaunchPage() {
 
   // Get game metadata - fall back to predefined if backend doesn't have it
   const game = getGameMetadata(gameId, backendGame);
+
+  const handleFullscreenToggle = useCallback(() => {
+    if (!document.fullscreenElement) {
+      gameContainerRef.current?.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  }, []);
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -80,19 +107,37 @@ export default function GameLaunchPage() {
     );
   }
 
-  // Shared back button positioned to the left of the game content
-  const BackButton = () => (
-    <Link to="/">
-      <Button
-        variant="ghost"
-        className="gap-2 shrink-0 mt-1"
-        data-ocid="game.back.button"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Games
-      </Button>
-    </Link>
+  // Fullscreen button — sits to the right of the game area
+  const FullscreenButton = () => (
+    <button
+      type="button"
+      onClick={handleFullscreenToggle}
+      data-ocid="game.fullscreen.button"
+      title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+      className="shrink-0 mt-1 p-2 rounded-lg border border-border bg-card hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+    >
+      {isFullscreen ? (
+        <Minimize2 className="h-5 w-5" />
+      ) : (
+        <Maximize2 className="h-5 w-5" />
+      )}
+    </button>
   );
+
+  // Back button — hidden in fullscreen
+  const BackButton = () =>
+    isFullscreen ? null : (
+      <Link to="/">
+        <Button
+          variant="ghost"
+          className="gap-2 shrink-0 mt-1"
+          data-ocid="game.back.button"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Games
+        </Button>
+      </Link>
+    );
 
   // Render Match Word to Image game
   if (
@@ -101,7 +146,10 @@ export default function GameLaunchPage() {
     matchWordQuestions.length > 0
   ) {
     return (
-      <div className="flex items-start gap-4 px-4 py-8 min-h-screen">
+      <div
+        ref={gameContainerRef}
+        className={`flex items-start gap-4 px-4 py-8 min-h-screen ${isFullscreen ? "bg-background" : ""}`}
+      >
         <BackButton />
         <div className="flex-1 min-w-0">
           <MatchWordToImageGame
@@ -109,6 +157,7 @@ export default function GameLaunchPage() {
             gameName={game.name}
           />
         </div>
+        <FullscreenButton />
       </div>
     );
   }
@@ -120,7 +169,10 @@ export default function GameLaunchPage() {
     chooseImageQuestions.length > 0
   ) {
     return (
-      <div className="flex items-start gap-4 px-4 py-8 min-h-screen">
+      <div
+        ref={gameContainerRef}
+        className={`flex items-start gap-4 px-4 py-8 min-h-screen ${isFullscreen ? "bg-background" : ""}`}
+      >
         <BackButton />
         <div className="flex-1 min-w-0">
           <ChooseCorrectImageGame
@@ -128,6 +180,7 @@ export default function GameLaunchPage() {
             gameName={game.name}
           />
         </div>
+        <FullscreenButton />
       </div>
     );
   }

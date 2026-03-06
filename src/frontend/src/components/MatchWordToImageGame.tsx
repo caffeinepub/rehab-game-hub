@@ -242,30 +242,6 @@ export default function MatchWordToImageGame({
         </div>
       </div>
 
-      {/* Live Ratio Tracker */}
-      <div
-        className="mb-4 flex items-center justify-center gap-6 bg-card border border-border rounded-xl px-6 py-3"
-        data-ocid="match-word.score.panel"
-      >
-        <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-green-600" />
-          <span className="text-2xl font-bold text-green-600">{score}</span>
-          <span className="text-sm text-muted-foreground font-medium">
-            Correct
-          </span>
-        </div>
-        <div className="w-px h-8 bg-border" />
-        <div className="flex items-center gap-2">
-          <XCircle className="h-5 w-5 text-red-500" />
-          <span className="text-2xl font-bold text-red-500">
-            {wrongAttempts}
-          </span>
-          <span className="text-sm text-muted-foreground font-medium">
-            Wrong
-          </span>
-        </div>
-      </div>
-
       <Card className="overflow-hidden">
         {/* Image Display */}
         <div className="aspect-video w-full bg-muted relative overflow-hidden">
