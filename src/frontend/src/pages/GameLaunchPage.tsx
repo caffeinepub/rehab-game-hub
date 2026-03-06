@@ -80,6 +80,20 @@ export default function GameLaunchPage() {
     );
   }
 
+  // Shared back button positioned to the left of the game content
+  const BackButton = () => (
+    <Link to="/">
+      <Button
+        variant="ghost"
+        className="gap-2 shrink-0 mt-1"
+        data-ocid="game.back.button"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Games
+      </Button>
+    </Link>
+  );
+
   // Render Match Word to Image game
   if (
     isMatchWordToImageGame &&
@@ -87,17 +101,14 @@ export default function GameLaunchPage() {
     matchWordQuestions.length > 0
   ) {
     return (
-      <div className="container mx-auto px-4 py-12">
-        <Link to="/">
-          <Button variant="ghost" className="gap-2 mb-6">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Games
-          </Button>
-        </Link>
-        <MatchWordToImageGame
-          questions={matchWordQuestions}
-          gameName={game.name}
-        />
+      <div className="flex items-start gap-4 px-4 py-8 min-h-screen">
+        <BackButton />
+        <div className="flex-1 min-w-0">
+          <MatchWordToImageGame
+            questions={matchWordQuestions}
+            gameName={game.name}
+          />
+        </div>
       </div>
     );
   }
@@ -109,17 +120,14 @@ export default function GameLaunchPage() {
     chooseImageQuestions.length > 0
   ) {
     return (
-      <div className="container mx-auto px-4 py-12">
-        <Link to="/">
-          <Button variant="ghost" className="gap-2 mb-6">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Games
-          </Button>
-        </Link>
-        <ChooseCorrectImageGame
-          questions={chooseImageQuestions}
-          gameName={game.name}
-        />
+      <div className="flex items-start gap-4 px-4 py-8 min-h-screen">
+        <BackButton />
+        <div className="flex-1 min-w-0">
+          <ChooseCorrectImageGame
+            questions={chooseImageQuestions}
+            gameName={game.name}
+          />
+        </div>
       </div>
     );
   }
@@ -132,14 +140,9 @@ export default function GameLaunchPage() {
       (!chooseImageQuestions || chooseImageQuestions.length === 0))
   ) {
     return (
-      <div className="container mx-auto px-4 py-12">
-        <Link to="/">
-          <Button variant="ghost" className="gap-2 mb-6">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Games
-          </Button>
-        </Link>
-        <div className="max-w-2xl mx-auto">
+      <div className="flex items-start gap-4 px-4 py-8 min-h-screen">
+        <BackButton />
+        <div className="flex-1 min-w-0 max-w-2xl">
           <div className="bg-card rounded-lg border border-border p-12 text-center">
             <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-foreground mb-2">
@@ -157,15 +160,10 @@ export default function GameLaunchPage() {
 
   // For other games, show coming soon message
   return (
-    <div className="container mx-auto px-4 py-12">
-      <Link to="/">
-        <Button variant="ghost" className="gap-2 mb-6">
-          <ArrowLeft className="h-4 w-4" />
-          Back to Games
-        </Button>
-      </Link>
+    <div className="flex items-start gap-4 px-4 py-8 min-h-screen">
+      <BackButton />
 
-      <div className="max-w-4xl mx-auto">
+      <div className="flex-1 min-w-0 max-w-4xl">
         <div className="bg-card rounded-lg border border-border overflow-hidden shadow-lg">
           <div className="p-8">
             <h1 className="text-4xl font-bold text-foreground mb-4">
