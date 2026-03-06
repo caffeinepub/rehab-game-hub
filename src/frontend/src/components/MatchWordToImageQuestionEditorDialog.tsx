@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useCreateQuestion } from '@/hooks/useQueries';
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -7,13 +6,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2, Upload, X } from 'lucide-react';
-import { fileToExternalBlob } from '@/lib/externalBlob';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useCreateQuestion } from "@/hooks/useQueries";
+import { fileToExternalBlob } from "@/lib/externalBlob";
+import { Loader2, Upload, X } from "lucide-react";
+import { useState } from "react";
 
 interface MatchWordToImageQuestionEditorDialogProps {
   open: boolean;
@@ -29,10 +29,10 @@ export default function MatchWordToImageQuestionEditorDialog({
   const createMutation = useCreateQuestion();
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [option1, setOption1] = useState('');
-  const [option2, setOption2] = useState('');
-  const [option3, setOption3] = useState('');
-  const [correctOption, setCorrectOption] = useState<string>('');
+  const [option1, setOption1] = useState("");
+  const [option2, setOption2] = useState("");
+  const [option3, setOption3] = useState("");
+  const [correctOption, setCorrectOption] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,25 +59,27 @@ export default function MatchWordToImageQuestionEditorDialog({
 
     // Validation
     if (!imageFile) {
-      setError('Please select an image');
+      setError("Please select an image");
       return;
     }
 
-    const options = [option1.trim(), option2.trim(), option3.trim()].filter((o) => o.length > 0);
-    
+    const options = [option1.trim(), option2.trim(), option3.trim()].filter(
+      (o) => o.length > 0,
+    );
+
     if (options.length !== 3) {
-      setError('Please provide exactly 3 options');
+      setError("Please provide exactly 3 options");
       return;
     }
 
     if (!correctOption || !options.includes(correctOption)) {
-      setError('Please select the correct option');
+      setError("Please select the correct option");
       return;
     }
 
     try {
       const imageBlob = await fileToExternalBlob(imageFile);
-      
+
       await createMutation.mutateAsync({
         gameId,
         image: imageBlob,
@@ -88,24 +90,26 @@ export default function MatchWordToImageQuestionEditorDialog({
       // Reset form
       setImageFile(null);
       setImagePreview(null);
-      setOption1('');
-      setOption2('');
-      setOption3('');
-      setCorrectOption('');
+      setOption1("");
+      setOption2("");
+      setOption3("");
+      setCorrectOption("");
       setError(null);
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create question');
+      setError(
+        err instanceof Error ? err.message : "Failed to create question",
+      );
     }
   };
 
   const handleCancel = () => {
     setImageFile(null);
     setImagePreview(null);
-    setOption1('');
-    setOption2('');
-    setOption3('');
-    setCorrectOption('');
+    setOption1("");
+    setOption2("");
+    setOption3("");
+    setCorrectOption("");
     setError(null);
     onOpenChange(false);
   };
@@ -118,7 +122,8 @@ export default function MatchWordToImageQuestionEditorDialog({
         <DialogHeader>
           <DialogTitle>Create New Question</DialogTitle>
           <DialogDescription>
-            Upload an image and provide three word options. Select which option is correct.
+            Upload an image and provide three word options. Select which option
+            is correct.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -191,23 +196,32 @@ export default function MatchWordToImageQuestionEditorDialog({
             {/* Correct Option Selection */}
             <div className="space-y-2">
               <Label>Correct Option *</Label>
-              <RadioGroup value={correctOption} onValueChange={setCorrectOption}>
+              <RadioGroup
+                value={correctOption}
+                onValueChange={setCorrectOption}
+              >
                 <div className="space-y-2">
-                  {[option1, option2, option3].map((opt, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <RadioGroupItem
-                        value={opt}
-                        id={`option-${index}`}
-                        disabled={!opt.trim()}
-                      />
-                      <Label
-                        htmlFor={`option-${index}`}
-                        className={`flex-1 ${!opt.trim() ? 'text-muted-foreground' : ''}`}
-                      >
-                        {opt.trim() || `Option ${index + 1} (enter text above)`}
-                      </Label>
-                    </div>
-                  ))}
+                  {(["option-1", "option-2", "option-3"] as const).map(
+                    (key, index) => {
+                      const opt = [option1, option2, option3][index];
+                      return (
+                        <div key={key} className="flex items-center space-x-2">
+                          <RadioGroupItem
+                            value={opt ?? ""}
+                            id={`option-${index}`}
+                            disabled={!opt?.trim()}
+                          />
+                          <Label
+                            htmlFor={`option-${index}`}
+                            className={`flex-1 ${!opt?.trim() ? "text-muted-foreground" : ""}`}
+                          >
+                            {opt?.trim() ||
+                              `Option ${index + 1} (enter text above)`}
+                          </Label>
+                        </div>
+                      );
+                    },
+                  )}
                 </div>
               </RadioGroup>
             </div>
@@ -220,11 +234,18 @@ export default function MatchWordToImageQuestionEditorDialog({
             )}
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Create Question
             </Button>
           </DialogFooter>

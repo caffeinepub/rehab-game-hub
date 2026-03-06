@@ -1,30 +1,32 @@
-import type { Game } from '@/backend';
+import type { Game } from "@/backend";
 
 // Stable predefined game IDs
-export const MATCH_WORD_TO_IMAGE_GAME_ID = 'match-word-to-image';
-export const CHOOSE_CORRECT_IMAGE_GAME_ID = 'choose-correct-image';
+export const MATCH_WORD_TO_IMAGE_GAME_ID = "match-word-to-image";
+export const CHOOSE_CORRECT_IMAGE_GAME_ID = "choose-correct-image";
 
 // Game metadata
 export const MATCH_WORD_TO_IMAGE_GAME = {
   id: MATCH_WORD_TO_IMAGE_GAME_ID,
-  name: 'Match Word to Image',
-  description: 'Match the correct word to the displayed image. A fun and engaging way to improve word recognition and cognitive skills.',
-  icon: '/assets/generated/game-thumbnail-placeholder.dim_800x600.png',
+  name: "Match Word to Image",
+  description:
+    "Match the correct word to the displayed image. A fun and engaging way to improve word recognition and cognitive skills.",
+  icon: "/assets/generated/game-thumbnail-placeholder.dim_800x600.png",
   badges: [],
-  primaryColor: '#6B7280',
-  secondaryColor: '#9CA3AF',
-  tags: ['cognitive', 'memory', 'word recognition'],
+  primaryColor: "#6B7280",
+  secondaryColor: "#9CA3AF",
+  tags: ["cognitive", "memory", "word recognition"],
 } as const;
 
 export const CHOOSE_CORRECT_IMAGE_GAME = {
   id: CHOOSE_CORRECT_IMAGE_GAME_ID,
-  name: 'Choose Correct Image',
-  description: 'See a word and choose the matching image from multiple options. Improve visual recognition and word association skills.',
-  icon: '/assets/generated/reverse-match-word-to-image-thumbnail.dim_800x600.png',
+  name: "Choose Correct Image",
+  description:
+    "See a word and choose the matching image from multiple options. Improve visual recognition and word association skills.",
+  icon: "/assets/generated/reverse-match-word-to-image-thumbnail.dim_800x600.png",
   badges: [],
-  primaryColor: '#6B7280',
-  secondaryColor: '#9CA3AF',
-  tags: ['cognitive', 'visual', 'word association'],
+  primaryColor: "#6B7280",
+  secondaryColor: "#9CA3AF",
+  tags: ["cognitive", "visual", "word association"],
 } as const;
 
 // Map of all predefined games by ID
@@ -62,27 +64,30 @@ export const PREDEFINED_GAMES: Game[] = [
  */
 export function mergeGamesWithPredefined(backendGames: Game[]): Game[] {
   const gameMap = new Map<string, Game>();
-  
+
   // First, add all predefined games
-  PREDEFINED_GAMES.forEach(game => {
+  for (const game of PREDEFINED_GAMES) {
     gameMap.set(game.id, game);
-  });
-  
+  }
+
   // Then, overlay backend games (they override predefined if same ID)
-  backendGames.forEach(game => {
+  for (const game of backendGames) {
     // Only include backend games that match our predefined IDs
     if (PREDEFINED_GAMES_MAP[game.id]) {
       gameMap.set(game.id, game);
     }
-  });
-  
+  }
+
   return Array.from(gameMap.values());
 }
 
 /**
  * Gets game metadata by ID, falling back to predefined if not found in backend.
  */
-export function getGameMetadata(gameId: string, backendGame?: Game | null): Game | null {
+export function getGameMetadata(
+  gameId: string,
+  backendGame?: Game | null,
+): Game | null {
   if (backendGame) {
     return backendGame;
   }

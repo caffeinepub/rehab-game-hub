@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import type { MatchWordToImageQuestion } from '@/backend';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Loader2, CheckCircle2, XCircle, Trophy } from 'lucide-react';
-import { blobToObjectURL } from '@/lib/externalBlob';
-import { shuffleArray, shuffleOptions } from '@/lib/shuffle';
+import type { MatchWordToImageQuestion } from "@/backend";
+import { Card } from "@/components/ui/card";
+import { blobToObjectURL } from "@/lib/externalBlob";
+import { shuffleArray, shuffleOptions } from "@/lib/shuffle";
+import { CheckCircle2, Loader2, Trophy, XCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface MatchWordToImageGameProps {
   questions: MatchWordToImageQuestion[];
@@ -18,44 +17,58 @@ interface ShuffledQuestion {
   correctIndex: number;
 }
 
-type OptionState = 'idle' | 'correct' | 'incorrect';
+type OptionState = "idle" | "correct" | "incorrect";
 
-export default function MatchWordToImageGame({ questions, gameName }: MatchWordToImageGameProps) {
-  const [shuffledQuestions, setShuffledQuestions] = useState<ShuffledQuestion[]>([]);
+export default function MatchWordToImageGame({
+  questions,
+  gameName,
+}: MatchWordToImageGameProps) {
+  const [shuffledQuestions, setShuffledQuestions] = useState<
+    ShuffledQuestion[]
+  >([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [optionStates, setOptionStates] = useState<OptionState[]>(['idle', 'idle', 'idle']);
+  const [optionStates, setOptionStates] = useState<OptionState[]>([
+    "idle",
+    "idle",
+    "idle",
+  ]);
   const [canProceed, setCanProceed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [gameComplete, setGameComplete] = useState(false);
+  const [score, setScore] = useState(0);
+  const [wrongAttempts, setWrongAttempts] = useState(0);
   const resetTimeoutRef = useRef<number | null>(null);
+  const autoAdvanceTimeoutRef = useRef<number | null>(null);
+  const shuffledQuestionsRef = useRef<ShuffledQuestion[]>([]);
 
   // Initialize and shuffle questions on mount
   useEffect(() => {
     const initializeGame = async () => {
       setLoading(true);
-      
+
       // Shuffle question order
       const shuffled = shuffleArray(questions);
-      
+
       // Load images and shuffle options for each question
       const processedQuestions = await Promise.all(
         shuffled.map(async (question) => {
           const imageUrl = await blobToObjectURL(question.image);
           const { shuffledOptions, correctIndex } = shuffleOptions(
             question.options,
-            question.correctOption
+            question.correctOption,
           );
-          
+
           return {
             id: question.id,
             imageUrl,
             options: shuffledOptions,
             correctIndex,
           };
-        })
+        }),
       );
-      
+
+      shuffledQuestionsRef.current = processedQuestions;
       setShuffledQuestions(processedQuestions);
       setLoading(false);
     };
@@ -64,41 +77,72 @@ export default function MatchWordToImageGame({ questions, gameName }: MatchWordT
 
     // Cleanup URLs on unmount
     return () => {
-      shuffledQuestions.forEach((q) => {
+      for (const q of shuffledQuestionsRef.current) {
         if (q.imageUrl) {
           URL.revokeObjectURL(q.imageUrl);
         }
-      });
+      }
     };
   }, [questions]);
 
-  // Cleanup timeout on unmount or question change
+  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (resetTimeoutRef.current !== null) {
         clearTimeout(resetTimeoutRef.current);
         resetTimeoutRef.current = null;
       }
+      if (autoAdvanceTimeoutRef.current !== null) {
+        clearTimeout(autoAdvanceTimeoutRef.current);
+        autoAdvanceTimeoutRef.current = null;
+      }
     };
-  }, [currentQuestionIndex]);
+  }, []);
 
   const currentQuestion = shuffledQuestions[currentQuestionIndex];
+
+  const speakWord = (word: string) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(word);
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const advanceToNext = () => {
+    if (currentQuestionIndex < shuffledQuestions.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
+      setSelectedOption(null);
+      setOptionStates(["idle", "idle", "idle"]);
+      setCanProceed(false);
+    } else {
+      setGameComplete(true);
+    }
+  };
 
   const handleOptionClick = (index: number) => {
     if (canProceed || selectedOption !== null) return;
 
     setSelectedOption(index);
-    const newStates: OptionState[] = ['idle', 'idle', 'idle'];
+    const newStates: OptionState[] = ["idle", "idle", "idle"];
 
     if (index === currentQuestion.correctIndex) {
-      newStates[index] = 'correct';
+      newStates[index] = "correct";
       setCanProceed(true);
+      setScore((prev) => prev + 1);
+      speakWord(currentQuestion.options[index]);
+      // Auto-advance after 3 seconds
+      autoAdvanceTimeoutRef.current = window.setTimeout(() => {
+        advanceToNext();
+        autoAdvanceTimeoutRef.current = null;
+      }, 3000);
     } else {
-      newStates[index] = 'incorrect';
+      newStates[index] = "incorrect";
+      setWrongAttempts((prev) => prev + 1);
       // Allow unlimited retries - reset after a short delay
       resetTimeoutRef.current = window.setTimeout(() => {
         setSelectedOption(null);
-        setOptionStates(['idle', 'idle', 'idle']);
+        setOptionStates(["idle", "idle", "idle"]);
         resetTimeoutRef.current = null;
       }, 800);
     }
@@ -106,24 +150,15 @@ export default function MatchWordToImageGame({ questions, gameName }: MatchWordT
     setOptionStates(newStates);
   };
 
-  const handleNext = () => {
-    if (currentQuestionIndex < shuffledQuestions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedOption(null);
-      setOptionStates(['idle', 'idle', 'idle']);
-      setCanProceed(false);
-    } else {
-      setGameComplete(true);
-    }
-  };
-
   const handleRestart = () => {
     setCurrentQuestionIndex(0);
     setSelectedOption(null);
-    setOptionStates(['idle', 'idle', 'idle']);
+    setOptionStates(["idle", "idle", "idle"]);
     setCanProceed(false);
     setGameComplete(false);
-    
+    setScore(0);
+    setWrongAttempts(0);
+
     // Re-shuffle questions
     const reshuffled = shuffleArray(shuffledQuestions);
     setShuffledQuestions(reshuffled);
@@ -138,20 +173,61 @@ export default function MatchWordToImageGame({ questions, gameName }: MatchWordT
     );
   }
 
+  const totalQuestions = shuffledQuestions.length;
+
   if (gameComplete) {
     return (
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto" data-ocid="match-word.results.panel">
         <Card className="p-12 text-center">
           <Trophy className="h-20 w-20 text-yellow-500 mx-auto mb-6" />
-          <h2 className="text-3xl font-bold text-foreground mb-4">Congratulations!</h2>
-          <p className="text-lg text-muted-foreground mb-8">
-            You've completed all {shuffledQuestions.length} questions in {gameName}!
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Button size="lg" onClick={handleRestart}>
-              Play Again
-            </Button>
+          <h2 className="text-3xl font-bold text-foreground mb-2">
+            Game Complete!
+          </h2>
+          <p className="text-lg text-muted-foreground mb-6">{gameName}</p>
+
+          {/* Final ratio */}
+          <div className="mb-8">
+            <p className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">
+              Session Results
+            </p>
+            <div className="flex items-center justify-center gap-8">
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-8 w-8 text-green-600" />
+                  <span className="text-5xl font-bold text-green-600">
+                    {score}
+                  </span>
+                </div>
+                <span className="text-sm text-muted-foreground font-medium">
+                  Correct
+                </span>
+              </div>
+              <div className="w-px h-16 bg-border" />
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex items-center gap-2">
+                  <XCircle className="h-8 w-8 text-red-500" />
+                  <span className="text-5xl font-bold text-red-500">
+                    {wrongAttempts}
+                  </span>
+                </div>
+                <span className="text-sm text-muted-foreground font-medium">
+                  Wrong
+                </span>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mt-4">
+              {totalQuestions} questions completed
+            </p>
           </div>
+
+          <button
+            type="button"
+            onClick={handleRestart}
+            data-ocid="match-word.results.primary_button"
+            className="px-8 py-3 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
+          >
+            Play Again
+          </button>
         </Card>
       </div>
     );
@@ -159,10 +235,34 @@ export default function MatchWordToImageGame({ questions, gameName }: MatchWordT
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">{gameName}</h1>
         <div className="text-sm text-muted-foreground">
           Question {currentQuestionIndex + 1} of {shuffledQuestions.length}
+        </div>
+      </div>
+
+      {/* Live Ratio Tracker */}
+      <div
+        className="mb-4 flex items-center justify-center gap-6 bg-card border border-border rounded-xl px-6 py-3"
+        data-ocid="match-word.score.panel"
+      >
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-5 w-5 text-green-600" />
+          <span className="text-2xl font-bold text-green-600">{score}</span>
+          <span className="text-sm text-muted-foreground font-medium">
+            Correct
+          </span>
+        </div>
+        <div className="w-px h-8 bg-border" />
+        <div className="flex items-center gap-2">
+          <XCircle className="h-5 w-5 text-red-500" />
+          <span className="text-2xl font-bold text-red-500">
+            {wrongAttempts}
+          </span>
+          <span className="text-sm text-muted-foreground font-medium">
+            Wrong
+          </span>
         </div>
       </div>
 
@@ -184,25 +284,29 @@ export default function MatchWordToImageGame({ questions, gameName }: MatchWordT
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
             {currentQuestion.options.map((option, index) => {
               const state = optionStates[index];
-              
+
               return (
                 <button
-                  key={index}
+                  type="button"
+                  key={option}
                   onClick={() => handleOptionClick(index)}
                   disabled={canProceed || selectedOption !== null}
-                  className={`relative text-lg h-auto py-4 px-6 rounded-md border-2 transition-all font-medium ${
-                    state === 'correct'
-                      ? 'border-green-600 bg-green-600 text-white ring-4 ring-green-600/20'
-                      : state === 'incorrect'
-                      ? 'border-red-600 ring-4 ring-red-600/20'
-                      : 'border-border bg-background hover:border-primary hover:bg-accent'
-                  } ${canProceed || selectedOption !== null ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                  data-ocid={`match-word.option.${index + 1}`}
+                  className={`relative text-5xl h-auto py-6 px-8 rounded-md border-2 transition-all font-medium ${
+                    state === "correct"
+                      ? "border-green-600 bg-green-600 text-white ring-4 ring-green-600/20"
+                      : state === "incorrect"
+                        ? "border-red-600 ring-4 ring-red-600/20"
+                        : "border-border bg-background hover:border-primary hover:bg-accent"
+                  } ${canProceed || selectedOption !== null ? "cursor-not-allowed" : "cursor-pointer"}`}
                 >
                   <span className="flex items-center justify-center gap-2">
                     {option}
-                    {state === 'correct' && <CheckCircle2 className="h-6 w-6" />}
+                    {state === "correct" && (
+                      <CheckCircle2 className="h-6 w-6" />
+                    )}
                   </span>
-                  {state === 'incorrect' && (
+                  {state === "incorrect" && (
                     <div className="absolute inset-0 bg-red-600/20 flex items-center justify-center rounded-md">
                       <XCircle className="h-16 w-16 text-red-600" />
                     </div>
@@ -211,17 +315,6 @@ export default function MatchWordToImageGame({ questions, gameName }: MatchWordT
               );
             })}
           </div>
-
-          {/* Next Button */}
-          {canProceed && (
-            <Button
-              size="lg"
-              className="w-full"
-              onClick={handleNext}
-            >
-              {currentQuestionIndex < shuffledQuestions.length - 1 ? 'Next Question' : 'Finish'}
-            </Button>
-          )}
         </div>
       </Card>
     </div>

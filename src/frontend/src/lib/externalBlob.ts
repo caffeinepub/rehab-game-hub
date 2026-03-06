@@ -1,4 +1,4 @@
-import { ExternalBlob } from '@/backend';
+import { ExternalBlob } from "@/backend";
 
 /**
  * Converts ExternalBlob bytes to an object URL for rendering images
@@ -6,7 +6,7 @@ import { ExternalBlob } from '@/backend';
  */
 export async function blobToObjectURL(blob: ExternalBlob): Promise<string> {
   const bytes = await blob.getBytes();
-  const imageBlob = new Blob([bytes], { type: 'image/jpeg' });
+  const imageBlob = new Blob([bytes], { type: "image/jpeg" });
   return URL.createObjectURL(imageBlob);
 }
 
@@ -49,4 +49,4 @@ export function useBlobURL(blob: ExternalBlob | null): string | null {
 }
 
 // Note: Import React for the hook
-import React from 'react';
+import React from "react";

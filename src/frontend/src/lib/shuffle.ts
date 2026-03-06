@@ -17,7 +17,7 @@ export function shuffleArray<T>(array: T[]): T[] {
  */
 export function shuffleOptions(
   options: string[],
-  correctOption: string
+  correctOption: string,
 ): { shuffledOptions: string[]; correctIndex: number } {
   const shuffled = shuffleArray(options);
   const correctIndex = shuffled.indexOf(correctOption);

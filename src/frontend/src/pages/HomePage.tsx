@@ -1,8 +1,8 @@
-import { useGetAllGames } from '@/hooks/useQueries';
-import { useActor } from '@/hooks/useActor';
-import GameCard from '@/components/GameCard';
-import { Loader2, AlertCircle } from 'lucide-react';
-import { mergeGamesWithPredefined } from '@/lib/gameConstants';
+import GameCard from "@/components/GameCard";
+import { useActor } from "@/hooks/useActor";
+import { useGetAllGames } from "@/hooks/useQueries";
+import { mergeGamesWithPredefined } from "@/lib/gameConstants";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 export default function HomePage() {
   const { isFetching: isActorFetching } = useActor();
@@ -38,7 +38,9 @@ export default function HomePage() {
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-foreground mb-2">Rehabilitation Games</h2>
+        <h2 className="text-3xl font-bold text-foreground mb-2">
+          Rehabilitation Games
+        </h2>
         <p className="text-muted-foreground">
           Select a game to begin your therapy session
         </p>
@@ -47,9 +49,12 @@ export default function HomePage() {
       {games.length === 0 ? (
         <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 bg-muted/30 rounded-lg border-2 border-dashed border-border p-12">
           <div className="text-center max-w-md">
-            <h3 className="text-xl font-semibold text-foreground mb-2">No games available yet</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-2">
+              No games available yet
+            </h3>
             <p className="text-muted-foreground mb-4">
-              Games are being prepared for you. Please check back soon or contact your administrator.
+              Games are being prepared for you. Please check back soon or
+              contact your administrator.
             </p>
           </div>
         </div>

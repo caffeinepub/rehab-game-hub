@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import type { MatchWordToImageQuestion } from '@/backend';
-import { Card, CardContent } from '@/components/ui/card';
-import { blobToObjectURL } from '@/lib/externalBlob';
-import { Loader2 } from 'lucide-react';
+import type { MatchWordToImageQuestion } from "@/backend";
+import { Card, CardContent } from "@/components/ui/card";
+import { blobToObjectURL } from "@/lib/externalBlob";
+import { Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface MatchWordToImageQuestionListProps {
   questions: MatchWordToImageQuestion[];
@@ -12,9 +12,14 @@ interface QuestionWithURL extends MatchWordToImageQuestion {
   imageUrl: string | null;
 }
 
-export default function MatchWordToImageQuestionList({ questions }: MatchWordToImageQuestionListProps) {
-  const [questionsWithUrls, setQuestionsWithUrls] = useState<QuestionWithURL[]>([]);
+export default function MatchWordToImageQuestionList({
+  questions,
+}: MatchWordToImageQuestionListProps) {
+  const [questionsWithUrls, setQuestionsWithUrls] = useState<QuestionWithURL[]>(
+    [],
+  );
   const [loading, setLoading] = useState(true);
+  const questionsWithUrlsRef = useRef<QuestionWithURL[]>([]);
 
   useEffect(() => {
     const loadImages = async () => {
@@ -25,11 +30,16 @@ export default function MatchWordToImageQuestionList({ questions }: MatchWordToI
             const imageUrl = await blobToObjectURL(question.image);
             return { ...question, imageUrl };
           } catch (error) {
-            console.error('Failed to load image for question:', question.id, error);
+            console.error(
+              "Failed to load image for question:",
+              question.id,
+              error,
+            );
             return { ...question, imageUrl: null };
           }
-        })
+        }),
       );
+      questionsWithUrlsRef.current = questionsWithImages;
       setQuestionsWithUrls(questionsWithImages);
       setLoading(false);
     };
@@ -38,11 +48,11 @@ export default function MatchWordToImageQuestionList({ questions }: MatchWordToI
 
     // Cleanup URLs on unmount
     return () => {
-      questionsWithUrls.forEach((q) => {
+      for (const q of questionsWithUrlsRef.current) {
         if (q.imageUrl) {
           URL.revokeObjectURL(q.imageUrl);
         }
-      });
+      }
     };
   }, [questions]);
 
@@ -57,7 +67,10 @@ export default function MatchWordToImageQuestionList({ questions }: MatchWordToI
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {questionsWithUrls.map((question) => (
-        <Card key={question.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+        <Card
+          key={question.id}
+          className="overflow-hidden hover:shadow-lg transition-shadow"
+        >
           <div className="aspect-video w-full bg-muted relative overflow-hidden">
             {question.imageUrl ? (
               <img
@@ -73,18 +86,20 @@ export default function MatchWordToImageQuestionList({ questions }: MatchWordToI
           </div>
           <CardContent className="p-4">
             <div className="space-y-2">
-              <div className="text-sm font-medium text-foreground">Options:</div>
+              <div className="text-sm font-medium text-foreground">
+                Options:
+              </div>
               <ul className="space-y-1">
-                {question.options.map((option, index) => (
+                {question.options.map((option) => (
                   <li
-                    key={index}
+                    key={option}
                     className={`text-sm px-2 py-1 rounded ${
                       option === question.correctOption
-                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 font-medium'
-                        : 'text-muted-foreground'
+                        ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 font-medium"
+                        : "text-muted-foreground"
                     }`}
                   >
-                    {option} {option === question.correctOption && '✓'}
+                    {option} {option === question.correctOption && "✓"}
                   </li>
                 ))}
               </ul>

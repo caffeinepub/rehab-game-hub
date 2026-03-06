@@ -1,12 +1,18 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useActor } from './useActor';
-import type { Game, MatchWordToImageQuestion, QuestionId, ExternalBlob, ChooseCorrectImageQuestion } from '@/backend';
+import type {
+  ChooseCorrectImageQuestion,
+  ExternalBlob,
+  Game,
+  MatchWordToImageQuestion,
+  QuestionId,
+} from "@/backend";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useActor } from "./useActor";
 
 export function useGetAllGames() {
   const { actor, isFetching } = useActor();
 
   return useQuery<Game[]>({
-    queryKey: ['games'],
+    queryKey: ["games"],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getAllGames();
@@ -19,9 +25,9 @@ export function useGetGameById(id: string) {
   const { actor, isFetching } = useActor();
 
   return useQuery<Game>({
-    queryKey: ['game', id],
+    queryKey: ["game", id],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not initialized');
+      if (!actor) throw new Error("Actor not initialized");
       return actor.getGameById(id);
     },
     enabled: !!actor && !isFetching && !!id,
@@ -34,7 +40,7 @@ export function useCreateGame() {
 
   return useMutation({
     mutationFn: async (game: Game) => {
-      if (!actor) throw new Error('Actor not initialized');
+      if (!actor) throw new Error("Actor not initialized");
       await actor.createGame(
         game.id,
         game.name,
@@ -43,11 +49,11 @@ export function useCreateGame() {
         game.badges,
         game.primaryColor,
         game.secondaryColor,
-        game.tags
+        game.tags,
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['games'] });
+      queryClient.invalidateQueries({ queryKey: ["games"] });
     },
   });
 }
@@ -58,7 +64,7 @@ export function useUpdateGame() {
 
   return useMutation({
     mutationFn: async (game: Game) => {
-      if (!actor) throw new Error('Actor not initialized');
+      if (!actor) throw new Error("Actor not initialized");
       await actor.updateGame(
         game.id,
         game.name,
@@ -67,11 +73,11 @@ export function useUpdateGame() {
         game.badges,
         game.primaryColor,
         game.secondaryColor,
-        game.tags
+        game.tags,
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['games'] });
+      queryClient.invalidateQueries({ queryKey: ["games"] });
     },
   });
 }
@@ -80,12 +86,12 @@ export function useDeleteGame() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (gameId: string) => {
+    mutationFn: async (_gameId: string) => {
       // Backend delete not yet implemented
-      throw new Error('Delete functionality not yet available');
+      throw new Error("Delete functionality not yet available");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['games'] });
+      queryClient.invalidateQueries({ queryKey: ["games"] });
     },
   });
 }
@@ -96,7 +102,7 @@ export function useGetAllQuestions(gameId: string) {
   const { actor, isFetching } = useActor();
 
   return useQuery<MatchWordToImageQuestion[]>({
-    queryKey: ['questions', gameId],
+    queryKey: ["questions", gameId],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getAllQuestions(gameId);
@@ -121,21 +127,28 @@ export function useCreateQuestion() {
       options: string[];
       correctOption: string;
     }) => {
-      if (!actor) throw new Error('Actor not initialized');
-      
+      if (!actor) throw new Error("Actor not initialized");
+
       if (options.length !== 3) {
-        throw new Error('Exactly 3 options are required');
-      }
-      
-      if (!options.includes(correctOption)) {
-        throw new Error('Correct option must be one of the provided options');
+        throw new Error("Exactly 3 options are required");
       }
 
-      const questionId = await actor.createQuestion(gameId, image, options, correctOption);
+      if (!options.includes(correctOption)) {
+        throw new Error("Correct option must be one of the provided options");
+      }
+
+      const questionId = await actor.createQuestion(
+        gameId,
+        image,
+        options,
+        correctOption,
+      );
       return questionId;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['questions', variables.gameId] });
+      queryClient.invalidateQueries({
+        queryKey: ["questions", variables.gameId],
+      });
     },
   });
 }
@@ -146,7 +159,7 @@ export function useGetAllChooseCorrectImageQuestions(gameId: string) {
   const { actor, isFetching } = useActor();
 
   return useQuery<ChooseCorrectImageQuestion[]>({
-    queryKey: ['chooseCorrectImageQuestions', gameId],
+    queryKey: ["chooseCorrectImageQuestions", gameId],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getAllChooseCorrectImageQuestions(gameId);
@@ -171,31 +184,35 @@ export function useCreateChooseCorrectImageQuestion() {
       images: ExternalBlob[];
       correctImageIndex: number;
     }) => {
-      if (!actor) throw new Error('Actor not initialized');
-      
+      if (!actor) throw new Error("Actor not initialized");
+
       if (!word.trim()) {
-        throw new Error('Word cannot be empty');
+        throw new Error("Word cannot be empty");
       }
-      
+
       if (images.length !== 3) {
-        throw new Error('Exactly 3 images are required');
+        throw new Error("Exactly 3 images are required");
       }
-      
+
       if (correctImageIndex < 0 || correctImageIndex >= images.length) {
-        throw new Error('Correct image index must be within the range of provided images');
+        throw new Error(
+          "Correct image index must be within the range of provided images",
+        );
       }
 
       // Convert number to bigint for backend
       const createdQuestion = await actor.createChooseCorrectImageQuestion(
-        gameId, 
-        word.trim(), 
-        images, 
-        BigInt(correctImageIndex)
+        gameId,
+        word.trim(),
+        images,
+        BigInt(correctImageIndex),
       );
       return createdQuestion;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['chooseCorrectImageQuestions', variables.gameId] });
+      queryClient.invalidateQueries({
+        queryKey: ["chooseCorrectImageQuestions", variables.gameId],
+      });
     },
   });
 }

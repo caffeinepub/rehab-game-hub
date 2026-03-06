@@ -1,8 +1,13 @@
-import { RouterProvider, createRouter, createRoute, createRootRoute } from '@tanstack/react-router';
-import AppLayout from './components/AppLayout';
-import HomePage from './pages/HomePage';
-import GameManagerPage from './pages/GameManagerPage';
-import GameLaunchPage from './pages/GameLaunchPage';
+import {
+  RouterProvider,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from "@tanstack/react-router";
+import AppLayout from "./components/AppLayout";
+import GameLaunchPage from "./pages/GameLaunchPage";
+import GameManagerPage from "./pages/GameManagerPage";
+import HomePage from "./pages/HomePage";
 
 const rootRoute = createRootRoute({
   component: AppLayout,
@@ -10,27 +15,31 @@ const rootRoute = createRootRoute({
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/',
+  path: "/",
   component: HomePage,
 });
 
 const managerRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/manager',
+  path: "/manager",
   component: GameManagerPage,
 });
 
 const gameLaunchRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/games/$gameId',
+  path: "/games/$gameId",
   component: GameLaunchPage,
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, managerRoute, gameLaunchRoute]);
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  managerRoute,
+  gameLaunchRoute,
+]);
 
 const router = createRouter({ routeTree });
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
   }
