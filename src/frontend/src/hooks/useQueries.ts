@@ -216,3 +216,97 @@ export function useCreateChooseCorrectImageQuestion() {
     },
   });
 }
+
+export function useUpdateQuestion() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      gameId,
+      questionId,
+      image,
+      options,
+      correctOption,
+    }: {
+      gameId: string;
+      questionId: QuestionId;
+      image: ExternalBlob;
+      options: string[];
+      correctOption: string;
+    }) => {
+      if (!actor) throw new Error("Actor not initialized");
+
+      if (options.length !== 3) {
+        throw new Error("Exactly 3 options are required");
+      }
+
+      if (!options.includes(correctOption)) {
+        throw new Error("Correct option must be one of the provided options");
+      }
+
+      await actor.updateQuestion(
+        gameId,
+        questionId,
+        image,
+        options,
+        correctOption,
+      );
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["questions", variables.gameId],
+      });
+    },
+  });
+}
+
+export function useUpdateChooseCorrectImageQuestion() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      gameId,
+      questionId,
+      word,
+      images,
+      correctImageIndex,
+    }: {
+      gameId: string;
+      questionId: string;
+      word: string;
+      images: ExternalBlob[];
+      correctImageIndex: number;
+    }) => {
+      if (!actor) throw new Error("Actor not initialized");
+
+      if (!word.trim()) {
+        throw new Error("Word cannot be empty");
+      }
+
+      if (images.length < 1) {
+        throw new Error("At least 1 image is required");
+      }
+
+      if (correctImageIndex < 0 || correctImageIndex >= images.length) {
+        throw new Error(
+          "Correct image index must be within the range of provided images",
+        );
+      }
+
+      await actor.updateChooseCorrectImageQuestion(
+        gameId,
+        questionId,
+        word.trim(),
+        images,
+        BigInt(correctImageIndex),
+      );
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["chooseCorrectImageQuestions", variables.gameId],
+      });
+    },
+  });
+}

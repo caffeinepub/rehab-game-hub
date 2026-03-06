@@ -141,7 +141,9 @@ export interface backendInterface {
     getGameById(id: GameId): Promise<Game>;
     getGamesByTag(tag: string): Promise<Array<Game>>;
     getQuestion(gameId: GameId, questionId: QuestionId): Promise<MatchWordToImageQuestion | null>;
+    updateChooseCorrectImageQuestion(gameId: GameId, questionId: string, word: string, images: Array<ExternalBlob>, correctImageIndex: bigint): Promise<void>;
     updateGame(id: GameId, name: string, description: string, icon: string, badges: Array<string>, primaryColor: string, secondaryColor: string, tags: Array<string>): Promise<void>;
+    updateQuestion(gameId: GameId, questionId: QuestionId, image: ExternalBlob, options: Array<Option>, correctOption: Option): Promise<void>;
 }
 import type { ChooseCorrectImageQuestion as _ChooseCorrectImageQuestion, ExternalBlob as _ExternalBlob, MatchWordToImageQuestion as _MatchWordToImageQuestion, Option as _Option, QuestionId as _QuestionId, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -356,6 +358,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n18(this._uploadFile, this._downloadFile, result);
         }
     }
+    async updateChooseCorrectImageQuestion(arg0: GameId, arg1: string, arg2: string, arg3: Array<ExternalBlob>, arg4: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateChooseCorrectImageQuestion(arg0, arg1, arg2, await to_candid_vec_n8(this._uploadFile, this._downloadFile, arg3), arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateChooseCorrectImageQuestion(arg0, arg1, arg2, await to_candid_vec_n8(this._uploadFile, this._downloadFile, arg3), arg4);
+            return result;
+        }
+    }
     async updateGame(arg0: GameId, arg1: string, arg2: string, arg3: string, arg4: Array<string>, arg5: string, arg6: string, arg7: Array<string>): Promise<void> {
         if (this.processError) {
             try {
@@ -367,6 +383,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateGame(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+            return result;
+        }
+    }
+    async updateQuestion(arg0: GameId, arg1: QuestionId, arg2: ExternalBlob, arg3: Array<Option>, arg4: Option): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateQuestion(arg0, arg1, await to_candid_ExternalBlob_n9(this._uploadFile, this._downloadFile, arg2), arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateQuestion(arg0, arg1, await to_candid_ExternalBlob_n9(this._uploadFile, this._downloadFile, arg2), arg3, arg4);
             return result;
         }
     }

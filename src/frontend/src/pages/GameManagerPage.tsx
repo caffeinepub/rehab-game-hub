@@ -1,3 +1,7 @@
+import type {
+  ChooseCorrectImageQuestion,
+  MatchWordToImageQuestion,
+} from "@/backend";
 import ChooseCorrectImageQuestionEditorDialog from "@/components/ChooseCorrectImageQuestionEditorDialog";
 import ChooseCorrectImageQuestionList from "@/components/ChooseCorrectImageQuestionList";
 import MatchWordToImageQuestionEditorDialog from "@/components/MatchWordToImageQuestionEditorDialog";
@@ -31,13 +35,46 @@ export default function GameManagerPage() {
   const [chooseImageEditorOpen, setChooseImageEditorOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("match-word");
 
+  // Edit state
+  const [editingMatchWordQuestion, setEditingMatchWordQuestion] =
+    useState<MatchWordToImageQuestion | null>(null);
+  const [editingChooseImageQuestion, setEditingChooseImageQuestion] =
+    useState<ChooseCorrectImageQuestion | null>(null);
+
+  const handleEditMatchWord = (question: MatchWordToImageQuestion) => {
+    setEditingMatchWordQuestion(question);
+    setMatchWordEditorOpen(true);
+  };
+
+  const handleEditChooseImage = (question: ChooseCorrectImageQuestion) => {
+    setEditingChooseImageQuestion(question);
+    setChooseImageEditorOpen(true);
+  };
+
+  const handleMatchWordOpenChange = (open: boolean) => {
+    setMatchWordEditorOpen(open);
+    if (!open) {
+      setEditingMatchWordQuestion(null);
+    }
+  };
+
+  const handleChooseImageOpenChange = (open: boolean) => {
+    setChooseImageEditorOpen(open);
+    if (!open) {
+      setEditingChooseImageQuestion(null);
+    }
+  };
+
   const isLoading = matchWordLoading || chooseImageLoading;
   const error = matchWordError || chooseImageError;
 
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div
+          className="flex flex-col items-center justify-center min-h-[400px] gap-4"
+          data-ocid="manager.loading_state"
+        >
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
           <p className="text-muted-foreground">Loading questions...</p>
         </div>
@@ -48,7 +85,10 @@ export default function GameManagerPage() {
   if (error) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div
+          className="flex flex-col items-center justify-center min-h-[400px] gap-4"
+          data-ocid="manager.error_state"
+        >
           <AlertCircle className="h-12 w-12 text-destructive" />
           <p className="text-destructive font-medium">
             Failed to load questions
@@ -72,8 +112,15 @@ export default function GameManagerPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
-          <TabsTrigger value="match-word">Match Word to Image</TabsTrigger>
-          <TabsTrigger value="choose-image">Choose Correct Image</TabsTrigger>
+          <TabsTrigger value="match-word" data-ocid="manager.match_word.tab">
+            Match Word to Image
+          </TabsTrigger>
+          <TabsTrigger
+            value="choose-image"
+            data-ocid="manager.choose_image.tab"
+          >
+            Choose Correct Image
+          </TabsTrigger>
         </TabsList>
 
         {/* Match Word to Image Tab */}
@@ -89,9 +136,13 @@ export default function GameManagerPage() {
               </p>
             </div>
             <Button
-              onClick={() => setMatchWordEditorOpen(true)}
+              onClick={() => {
+                setEditingMatchWordQuestion(null);
+                setMatchWordEditorOpen(true);
+              }}
               size="lg"
               className="gap-2"
+              data-ocid="manager.match_word.open_modal_button"
             >
               <Plus className="h-5 w-5" />
               Add Question
@@ -99,7 +150,10 @@ export default function GameManagerPage() {
           </div>
 
           {!matchWordQuestions || matchWordQuestions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 bg-muted/30 rounded-lg border-2 border-dashed border-border p-12">
+            <div
+              className="flex flex-col items-center justify-center min-h-[400px] gap-4 bg-muted/30 rounded-lg border-2 border-dashed border-border p-12"
+              data-ocid="manager.match_word.empty_state"
+            >
               <div className="text-center max-w-md">
                 <h3 className="text-xl font-semibold text-foreground mb-2">
                   No questions created yet
@@ -109,9 +163,13 @@ export default function GameManagerPage() {
                   includes an image and three word options.
                 </p>
                 <Button
-                  onClick={() => setMatchWordEditorOpen(true)}
+                  onClick={() => {
+                    setEditingMatchWordQuestion(null);
+                    setMatchWordEditorOpen(true);
+                  }}
                   size="lg"
                   className="gap-2"
+                  data-ocid="manager.match_word.primary_button"
                 >
                   <Plus className="h-5 w-5" />
                   Create First Question
@@ -119,7 +177,10 @@ export default function GameManagerPage() {
               </div>
             </div>
           ) : (
-            <MatchWordToImageQuestionList questions={matchWordQuestions} />
+            <MatchWordToImageQuestionList
+              questions={matchWordQuestions}
+              onEdit={handleEditMatchWord}
+            />
           )}
         </TabsContent>
 
@@ -136,9 +197,13 @@ export default function GameManagerPage() {
               </p>
             </div>
             <Button
-              onClick={() => setChooseImageEditorOpen(true)}
+              onClick={() => {
+                setEditingChooseImageQuestion(null);
+                setChooseImageEditorOpen(true);
+              }}
               size="lg"
               className="gap-2"
+              data-ocid="manager.choose_image.open_modal_button"
             >
               <Plus className="h-5 w-5" />
               Add Question
@@ -146,7 +211,10 @@ export default function GameManagerPage() {
           </div>
 
           {!chooseImageQuestions || chooseImageQuestions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 bg-muted/30 rounded-lg border-2 border-dashed border-border p-12">
+            <div
+              className="flex flex-col items-center justify-center min-h-[400px] gap-4 bg-muted/30 rounded-lg border-2 border-dashed border-border p-12"
+              data-ocid="manager.choose_image.empty_state"
+            >
               <div className="text-center max-w-md">
                 <h3 className="text-xl font-semibold text-foreground mb-2">
                   No questions created yet
@@ -156,9 +224,13 @@ export default function GameManagerPage() {
                   includes a word and multiple image options.
                 </p>
                 <Button
-                  onClick={() => setChooseImageEditorOpen(true)}
+                  onClick={() => {
+                    setEditingChooseImageQuestion(null);
+                    setChooseImageEditorOpen(true);
+                  }}
                   size="lg"
                   className="gap-2"
+                  data-ocid="manager.choose_image.primary_button"
                 >
                   <Plus className="h-5 w-5" />
                   Create First Question
@@ -166,7 +238,10 @@ export default function GameManagerPage() {
               </div>
             </div>
           ) : (
-            <ChooseCorrectImageQuestionList questions={chooseImageQuestions} />
+            <ChooseCorrectImageQuestionList
+              questions={chooseImageQuestions}
+              onEdit={handleEditChooseImage}
+            />
           )}
         </TabsContent>
       </Tabs>
@@ -174,13 +249,15 @@ export default function GameManagerPage() {
       {/* Dialogs */}
       <MatchWordToImageQuestionEditorDialog
         open={matchWordEditorOpen}
-        onOpenChange={setMatchWordEditorOpen}
+        onOpenChange={handleMatchWordOpenChange}
         gameId={MATCH_WORD_TO_IMAGE_GAME_ID}
+        initialQuestion={editingMatchWordQuestion ?? undefined}
       />
       <ChooseCorrectImageQuestionEditorDialog
         open={chooseImageEditorOpen}
-        onOpenChange={setChooseImageEditorOpen}
+        onOpenChange={handleChooseImageOpenChange}
         gameId={CHOOSE_CORRECT_IMAGE_GAME_ID}
+        initialQuestion={editingChooseImageQuestion ?? undefined}
       />
     </div>
   );

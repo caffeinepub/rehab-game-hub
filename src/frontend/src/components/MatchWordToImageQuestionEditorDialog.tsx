@@ -1,3 +1,4 @@
+import type { ExternalBlob, MatchWordToImageQuestion } from "@/backend";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,35 +11,70 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useCreateQuestion } from "@/hooks/useQueries";
+import { useCreateQuestion, useUpdateQuestion } from "@/hooks/useQueries";
 import { fileToExternalBlob } from "@/lib/externalBlob";
 import { Loader2, Upload, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface MatchWordToImageQuestionEditorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   gameId: string;
+  initialQuestion?: MatchWordToImageQuestion;
 }
 
 export default function MatchWordToImageQuestionEditorDialog({
   open,
   onOpenChange,
   gameId,
+  initialQuestion,
 }: MatchWordToImageQuestionEditorDialogProps) {
+  const isEditMode = !!initialQuestion;
   const createMutation = useCreateQuestion();
+  const updateMutation = useUpdateQuestion();
+
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // When editing and no new file is selected, we keep the existing blob
+  const [existingBlob, setExistingBlob] = useState<ExternalBlob | null>(null);
   const [option1, setOption1] = useState("");
   const [option2, setOption2] = useState("");
   const [option3, setOption3] = useState("");
   const [correctOption, setCorrectOption] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
+  // Reset state when dialog opens/closes or initialQuestion changes
+  useEffect(() => {
+    if (open) {
+      if (initialQuestion) {
+        // Pre-fill for edit mode
+        const opts = initialQuestion.options;
+        setOption1(opts[0] ?? "");
+        setOption2(opts[1] ?? "");
+        setOption3(opts[2] ?? "");
+        setCorrectOption(initialQuestion.correctOption);
+        setExistingBlob(initialQuestion.image);
+        setImagePreview(initialQuestion.image.getDirectURL());
+        setImageFile(null);
+      } else {
+        // Fresh state for create mode
+        setOption1("");
+        setOption2("");
+        setOption3("");
+        setCorrectOption("");
+        setExistingBlob(null);
+        setImageFile(null);
+        setImagePreview(null);
+      }
+      setError(null);
+    }
+  }, [open, initialQuestion]);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
+      setExistingBlob(null);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -50,6 +86,7 @@ export default function MatchWordToImageQuestionEditorDialog({
 
   const handleRemoveImage = () => {
     setImageFile(null);
+    setExistingBlob(null);
     setImagePreview(null);
   };
 
@@ -58,7 +95,8 @@ export default function MatchWordToImageQuestionEditorDialog({
     setError(null);
 
     // Validation
-    if (!imageFile) {
+    const hasImage = imageFile !== null || existingBlob !== null;
+    if (!hasImage) {
       setError("Please select an image");
       return;
     }
@@ -78,33 +116,49 @@ export default function MatchWordToImageQuestionEditorDialog({
     }
 
     try {
-      const imageBlob = await fileToExternalBlob(imageFile);
+      // Determine the image blob to use
+      let imageBlob: ExternalBlob;
+      if (imageFile) {
+        imageBlob = await fileToExternalBlob(imageFile);
+      } else if (existingBlob) {
+        imageBlob = existingBlob;
+      } else {
+        setError("Please select an image");
+        return;
+      }
 
-      await createMutation.mutateAsync({
-        gameId,
-        image: imageBlob,
-        options,
-        correctOption,
-      });
+      if (isEditMode && initialQuestion) {
+        await updateMutation.mutateAsync({
+          gameId,
+          questionId: initialQuestion.id,
+          image: imageBlob,
+          options,
+          correctOption,
+        });
+      } else {
+        await createMutation.mutateAsync({
+          gameId,
+          image: imageBlob,
+          options,
+          correctOption,
+        });
+      }
 
-      // Reset form
-      setImageFile(null);
-      setImagePreview(null);
-      setOption1("");
-      setOption2("");
-      setOption3("");
-      setCorrectOption("");
-      setError(null);
-      onOpenChange(false);
+      resetAndClose();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to create question",
+        err instanceof Error
+          ? err.message
+          : isEditMode
+            ? "Failed to update question"
+            : "Failed to create question",
       );
     }
   };
 
-  const handleCancel = () => {
+  const resetAndClose = () => {
     setImageFile(null);
+    setExistingBlob(null);
     setImagePreview(null);
     setOption1("");
     setOption2("");
@@ -114,13 +168,19 @@ export default function MatchWordToImageQuestionEditorDialog({
     onOpenChange(false);
   };
 
-  const isSubmitting = createMutation.isPending;
+  const handleCancel = () => {
+    resetAndClose();
+  };
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Question</DialogTitle>
+          <DialogTitle>
+            {isEditMode ? "Edit Question" : "Create New Question"}
+          </DialogTitle>
           <DialogDescription>
             Upload an image and provide three word options. Select which option
             is correct.
@@ -175,19 +235,33 @@ export default function MatchWordToImageQuestionEditorDialog({
                 <Input
                   placeholder="Option 1"
                   value={option1}
-                  onChange={(e) => setOption1(e.target.value)}
+                  onChange={(e) => {
+                    setOption1(e.target.value);
+                    // If the correct option was pointing to this option's old value, update it
+                    if (correctOption === option1)
+                      setCorrectOption(e.target.value);
+                  }}
+                  data-ocid="match_word_question.input"
                   required
                 />
                 <Input
                   placeholder="Option 2"
                   value={option2}
-                  onChange={(e) => setOption2(e.target.value)}
+                  onChange={(e) => {
+                    setOption2(e.target.value);
+                    if (correctOption === option2)
+                      setCorrectOption(e.target.value);
+                  }}
                   required
                 />
                 <Input
                   placeholder="Option 3"
                   value={option3}
-                  onChange={(e) => setOption3(e.target.value)}
+                  onChange={(e) => {
+                    setOption3(e.target.value);
+                    if (correctOption === option3)
+                      setCorrectOption(e.target.value);
+                  }}
                   required
                 />
               </div>
@@ -228,7 +302,10 @@ export default function MatchWordToImageQuestionEditorDialog({
 
             {/* Error Message */}
             {error && (
-              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg">
+              <div
+                className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg"
+                data-ocid="match_word_question.error_state"
+              >
                 {error}
               </div>
             )}
@@ -239,14 +316,19 @@ export default function MatchWordToImageQuestionEditorDialog({
               variant="outline"
               onClick={handleCancel}
               disabled={isSubmitting}
+              data-ocid="match_word_question.cancel_button"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              data-ocid="match_word_question.submit_button"
+            >
               {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Create Question
+              {isEditMode ? "Save Changes" : "Create Question"}
             </Button>
           </DialogFooter>
         </form>

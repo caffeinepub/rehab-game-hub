@@ -1,14 +1,15 @@
 import Array "mo:core/Array";
 import Map "mo:core/Map";
-import Text "mo:core/Text";
 import List "mo:core/List";
 import Iter "mo:core/Iter";
+import Text "mo:core/Text";
 import Runtime "mo:core/Runtime";
+import Migration "migration";
 
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
 
-
+(with migration = Migration.run)
 actor {
   include MixinStorage();
 
@@ -87,8 +88,6 @@ actor {
     );
   };
 
-  // Match Word to Image functionality
-
   public type QuestionId = Text;
   public type Option = Text;
 
@@ -130,6 +129,48 @@ actor {
     questionId;
   };
 
+  public shared ({ caller }) func updateQuestion(gameId : GameId, questionId : QuestionId, image : Storage.ExternalBlob, options : [Option], correctOption : Option) : async () {
+    if (not persistentQuestions.containsKey(gameId)) {
+      Runtime.trap("Game with specified ID does not exist.");
+    };
+
+    let updatedQuestion : MatchWordToImageQuestion = {
+      id = questionId;
+      image;
+      options;
+      correctOption;
+    };
+
+    switch (persistentQuestions.get(gameId)) {
+      case (null) {
+        Runtime.trap("No questions found for game. Should not happen, because game existence is checked before. Try refreshing the page to be sure you have the only saved reference to the actor state.");
+      };
+      case (?questions) {
+        if (questions.isEmpty()) {
+          Runtime.trap("No questions found for game. Should not happen, because game existence is checked before. Try refreshing the page to be sure you have the only saved reference to the actor state.");
+        };
+
+        var found = false;
+        let newQuestions = questions.map<MatchWordToImageQuestion, MatchWordToImageQuestion>(
+          func(question) {
+            if (question.id == questionId) {
+              found := true;
+              updatedQuestion;
+            } else {
+              question;
+            };
+          }
+        );
+
+        if (not found) {
+          Runtime.trap("Question with specified ID does not exist.");
+        };
+
+        persistentQuestions.add(gameId, newQuestions);
+      };
+    };
+  };
+
   public query ({ caller }) func getAllQuestions(gameId : GameId) : async [MatchWordToImageQuestion] {
     switch (persistentQuestions.get(gameId)) {
       case (null) { [] };
@@ -150,8 +191,6 @@ actor {
       };
     };
   };
-
-  // Choose Correct Image Game Type
 
   public type ChooseCorrectImageQuestion = {
     id : Text;
@@ -189,6 +228,48 @@ actor {
       };
     };
     newQuestion;
+  };
+
+  public shared ({ caller }) func updateChooseCorrectImageQuestion(gameId : GameId, questionId : Text, word : Text, images : [Storage.ExternalBlob], correctImageIndex : Nat) : async () {
+    if (not persistentChooseCorrectImageQuestions.containsKey(gameId)) {
+      Runtime.trap("Game with specified ID does not exist.");
+    };
+
+    let updatedQuestion : ChooseCorrectImageQuestion = {
+      id = questionId;
+      word;
+      images;
+      correctImageIndex;
+    };
+
+    switch (persistentChooseCorrectImageQuestions.get(gameId)) {
+      case (null) {
+        Runtime.trap("No questions found for game. Should not happen, because game existence is checked for that before!");
+      };
+      case (?questions) {
+        if (questions.isEmpty()) {
+          Runtime.trap("No questions found for game. Should not happen, because game existence is checked for that before!");
+        };
+
+        var found = false;
+        let newQuestions = questions.map<ChooseCorrectImageQuestion, ChooseCorrectImageQuestion>(
+          func(question) {
+            if (question.id == questionId) {
+              found := true;
+              updatedQuestion;
+            } else {
+              question;
+            };
+          }
+        );
+
+        if (not found) {
+          Runtime.trap("Question with specified ID does not exist.");
+        };
+
+        persistentChooseCorrectImageQuestions.add(gameId, newQuestions);
+      };
+    };
   };
 
   public query ({ caller }) func getAllChooseCorrectImageQuestions(gameId : GameId) : async [ChooseCorrectImageQuestion] {

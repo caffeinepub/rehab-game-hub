@@ -115,6 +115,11 @@ export const idlService = IDL.Service({
       [IDL.Opt(MatchWordToImageQuestion)],
       ['query'],
     ),
+  'updateChooseCorrectImageQuestion' : IDL.Func(
+      [GameId, IDL.Text, IDL.Text, IDL.Vec(ExternalBlob), IDL.Nat],
+      [],
+      [],
+    ),
   'updateGame' : IDL.Func(
       [
         GameId,
@@ -126,6 +131,11 @@ export const idlService = IDL.Service({
         IDL.Text,
         IDL.Vec(IDL.Text),
       ],
+      [],
+      [],
+    ),
+  'updateQuestion' : IDL.Func(
+      [GameId, QuestionId, ExternalBlob, IDL.Vec(Option), Option],
       [],
       [],
     ),
@@ -241,6 +251,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(MatchWordToImageQuestion)],
         ['query'],
       ),
+    'updateChooseCorrectImageQuestion' : IDL.Func(
+        [GameId, IDL.Text, IDL.Text, IDL.Vec(ExternalBlob), IDL.Nat],
+        [],
+        [],
+      ),
     'updateGame' : IDL.Func(
         [
           GameId,
@@ -252,6 +267,11 @@ export const idlFactory = ({ IDL }) => {
           IDL.Text,
           IDL.Vec(IDL.Text),
         ],
+        [],
+        [],
+      ),
+    'updateQuestion' : IDL.Func(
+        [GameId, QuestionId, ExternalBlob, IDL.Vec(Option), Option],
         [],
         [],
       ),

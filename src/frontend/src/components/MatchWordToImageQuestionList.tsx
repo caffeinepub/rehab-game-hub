@@ -1,11 +1,13 @@
 import type { MatchWordToImageQuestion } from "@/backend";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { blobToObjectURL } from "@/lib/externalBlob";
-import { Loader2 } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 interface MatchWordToImageQuestionListProps {
   questions: MatchWordToImageQuestion[];
+  onEdit: (question: MatchWordToImageQuestion) => void;
 }
 
 interface QuestionWithURL extends MatchWordToImageQuestion {
@@ -14,6 +16,7 @@ interface QuestionWithURL extends MatchWordToImageQuestion {
 
 export default function MatchWordToImageQuestionList({
   questions,
+  onEdit,
 }: MatchWordToImageQuestionListProps) {
   const [questionsWithUrls, setQuestionsWithUrls] = useState<QuestionWithURL[]>(
     [],
@@ -66,10 +69,11 @@ export default function MatchWordToImageQuestionList({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {questionsWithUrls.map((question) => (
+      {questionsWithUrls.map((question, idx) => (
         <Card
           key={question.id}
           className="overflow-hidden hover:shadow-lg transition-shadow"
+          data-ocid={`match_word_question.item.${idx + 1}`}
         >
           <div className="aspect-video w-full bg-muted relative overflow-hidden">
             {question.imageUrl ? (
@@ -83,6 +87,17 @@ export default function MatchWordToImageQuestionList({
                 Failed to load image
               </div>
             )}
+            {/* Edit button — top-right corner of the image */}
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              className="absolute top-2 right-2 h-8 w-8 shadow-md"
+              onClick={() => onEdit(question)}
+              data-ocid={`match_word_question.edit_button.${idx + 1}`}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
           </div>
           <CardContent className="p-4">
             <div className="space-y-2">

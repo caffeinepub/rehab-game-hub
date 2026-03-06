@@ -1,3 +1,4 @@
+import type { ChooseCorrectImageQuestion, ExternalBlob } from "@/backend";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,59 +11,107 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useCreateChooseCorrectImageQuestion } from "@/hooks/useQueries";
+import {
+  useCreateChooseCorrectImageQuestion,
+  useUpdateChooseCorrectImageQuestion,
+} from "@/hooks/useQueries";
 import { fileToExternalBlob } from "@/lib/externalBlob";
 import { Loader2, Upload, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface ChooseCorrectImageQuestionEditorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   gameId: string;
+  initialQuestion?: ChooseCorrectImageQuestion;
 }
 
-interface ImageUpload {
-  file: File;
-  preview: string;
-}
+// An image slot: either an existing blob (from backend) or a newly uploaded file
+type ExistingImage = { kind: "existing"; url: string; blob: ExternalBlob };
+type NewImage = { kind: "new"; file: File; preview: string };
+type ImageSlot = ExistingImage | NewImage;
 
 export default function ChooseCorrectImageQuestionEditorDialog({
   open,
   onOpenChange,
   gameId,
+  initialQuestion,
 }: ChooseCorrectImageQuestionEditorDialogProps) {
+  const isEditMode = !!initialQuestion;
   const createMutation = useCreateChooseCorrectImageQuestion();
+  const updateMutation = useUpdateChooseCorrectImageQuestion();
+
   const [word, setWord] = useState("");
-  const [images, setImages] = useState<ImageUpload[]>([]);
+  const [imageSlots, setImageSlots] = useState<ImageSlot[]>([]);
   const [correctImageIndex, setCorrectImageIndex] = useState<number>(-1);
   const [error, setError] = useState<string | null>(null);
+
+  // Reset state when dialog opens/closes or initialQuestion changes
+  useEffect(() => {
+    if (open) {
+      if (initialQuestion) {
+        setWord(initialQuestion.word);
+        const existingSlots: ImageSlot[] = initialQuestion.images.map(
+          (img) => ({
+            kind: "existing",
+            url: img.getDirectURL(),
+            blob: img,
+          }),
+        );
+        setImageSlots(existingSlots);
+        setCorrectImageIndex(Number(initialQuestion.correctImageIndex));
+      } else {
+        setWord("");
+        setImageSlots([]);
+        setCorrectImageIndex(-1);
+      }
+      setError(null);
+    }
+  }, [open, initialQuestion]);
 
   const handleImageAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
 
     for (const file of files) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImages((prev) => {
-          // Limit to 3 images total
+      // In create mode, enforce 3-image limit
+      if (!isEditMode) {
+        setImageSlots((prev) => {
           if (prev.length >= 3) {
             setError("Maximum 3 images allowed");
             return prev;
           }
-          return [...prev, { file, preview: reader.result as string }];
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setImageSlots((current) => {
+              if (current.length >= 3) return current;
+              return [
+                ...current,
+                { kind: "new", file, preview: reader.result as string },
+              ];
+            });
+          };
+          reader.readAsDataURL(file);
+          return prev;
         });
-      };
-      reader.readAsDataURL(file);
+      } else {
+        // In edit mode, no limit
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImageSlots((current) => [
+            ...current,
+            { kind: "new", file, preview: reader.result as string },
+          ]);
+        };
+        reader.readAsDataURL(file);
+      }
     }
 
     setError(null);
-    // Reset the input so the same file can be selected again if needed
     e.target.value = "";
   };
 
   const handleRemoveImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-    // Adjust correct image index if needed
+    setImageSlots((prev) => prev.filter((_, i) => i !== index));
     if (correctImageIndex === index) {
       setCorrectImageIndex(-1);
     } else if (correctImageIndex > index) {
@@ -74,65 +123,96 @@ export default function ChooseCorrectImageQuestionEditorDialog({
     e.preventDefault();
     setError(null);
 
-    // Validation
     if (!word.trim()) {
       setError("Please enter a word");
       return;
     }
 
-    if (images.length !== 3) {
+    if (!isEditMode && imageSlots.length !== 3) {
       setError("Exactly 3 images are required");
       return;
     }
 
-    if (correctImageIndex < 0 || correctImageIndex >= images.length) {
+    if (isEditMode && imageSlots.length < 1) {
+      setError("At least 1 image is required");
+      return;
+    }
+
+    if (correctImageIndex < 0 || correctImageIndex >= imageSlots.length) {
       setError("Please select the correct image");
       return;
     }
 
     try {
+      // Build the final blobs array from all slots
       const imageBlobs = await Promise.all(
-        images.map((img) => fileToExternalBlob(img.file)),
+        imageSlots.map(async (slot) => {
+          if (slot.kind === "existing") {
+            return slot.blob;
+          }
+          return fileToExternalBlob(slot.file);
+        }),
       );
 
-      await createMutation.mutateAsync({
-        gameId,
-        word: word.trim(),
-        images: imageBlobs,
-        correctImageIndex,
-      });
+      if (isEditMode && initialQuestion) {
+        await updateMutation.mutateAsync({
+          gameId,
+          questionId: initialQuestion.id,
+          word: word.trim(),
+          images: imageBlobs,
+          correctImageIndex,
+        });
+      } else {
+        await createMutation.mutateAsync({
+          gameId,
+          word: word.trim(),
+          images: imageBlobs,
+          correctImageIndex,
+        });
+      }
 
-      // Reset form
-      setWord("");
-      setImages([]);
-      setCorrectImageIndex(-1);
-      setError(null);
-      onOpenChange(false);
+      resetAndClose();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to create question",
+        err instanceof Error
+          ? err.message
+          : isEditMode
+            ? "Failed to update question"
+            : "Failed to create question",
       );
     }
   };
 
-  const handleCancel = () => {
+  const resetAndClose = () => {
     setWord("");
-    setImages([]);
+    setImageSlots([]);
     setCorrectImageIndex(-1);
     setError(null);
     onOpenChange(false);
   };
 
-  const isSubmitting = createMutation.isPending;
+  const handleCancel = () => {
+    resetAndClose();
+  };
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
+
+  // Whether we show the upload zone
+  const canAddMore = isEditMode || imageSlots.length < 3;
+  const previewForSlot = (slot: ImageSlot) =>
+    slot.kind === "existing" ? slot.url : slot.preview;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Question</DialogTitle>
+          <DialogTitle>
+            {isEditMode ? "Edit Question" : "Create New Question"}
+          </DialogTitle>
           <DialogDescription>
-            Enter a word and upload exactly 3 images. Select which image
-            correctly matches the word.
+            {isEditMode
+              ? "Update the word and images. Select which image correctly matches the word."
+              : "Enter a word and upload exactly 3 images. Select which image correctly matches the word."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -145,22 +225,27 @@ export default function ChooseCorrectImageQuestionEditorDialog({
                 placeholder="Enter a word (e.g., Apple, Dog, Car)"
                 value={word}
                 onChange={(e) => setWord(e.target.value)}
+                data-ocid="choose_image_question.input"
                 required
               />
             </div>
 
-            {/* Image Uploads */}
+            {/* Image Slots */}
             <div className="space-y-2">
-              <Label>Images (exactly 3) *</Label>
+              <Label>
+                Images {isEditMode ? "(any number)" : "(exactly 3)"} *
+              </Label>
 
-              {/* Image Grid */}
-              {images.length > 0 && (
+              {imageSlots.length > 0 && (
                 <div className="grid grid-cols-3 gap-3 mb-3">
-                  {images.map((img, index) => (
-                    <div key={img.preview} className="relative group">
+                  {imageSlots.map((slot, index) => (
+                    <div
+                      key={`slot-${index}-${slot.kind === "existing" ? slot.url : slot.preview}`}
+                      className="relative group"
+                    >
                       <img
-                        src={img.preview}
-                        alt={`Upload ${index + 1}`}
+                        src={previewForSlot(slot)}
+                        alt={`Option ${index + 1}`}
                         className="w-full h-32 object-cover rounded-lg border border-border"
                       />
                       <Button
@@ -177,15 +262,15 @@ export default function ChooseCorrectImageQuestionEditorDialog({
                 </div>
               )}
 
-              {/* Upload Button - only show if less than 3 images */}
-              {images.length < 3 && (
+              {canAddMore && (
                 <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors">
                   <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                   <Label
                     htmlFor="images"
                     className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
                   >
-                    Click to upload images ({images.length}/3)
+                    Click to upload images
+                    {!isEditMode && ` (${imageSlots.length}/3)`}
                   </Label>
                   <Input
                     id="images"
@@ -194,16 +279,19 @@ export default function ChooseCorrectImageQuestionEditorDialog({
                     multiple
                     className="hidden"
                     onChange={handleImageAdd}
+                    data-ocid="choose_image_question.upload_button"
                   />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    You need exactly 3 images
-                  </p>
+                  {!isEditMode && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      You need exactly 3 images
+                    </p>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* Correct Image Selection */}
-            {images.length === 3 && (
+            {/* Correct Image Selection — show whenever we have images */}
+            {imageSlots.length > 0 && (
               <div className="space-y-2">
                 <Label>Correct Image *</Label>
                 <RadioGroup
@@ -213,8 +301,11 @@ export default function ChooseCorrectImageQuestionEditorDialog({
                   }
                 >
                   <div className="grid grid-cols-3 gap-3">
-                    {images.map((img, index) => (
-                      <div key={img.preview} className="relative">
+                    {imageSlots.map((slot, index) => (
+                      <div
+                        key={`radio-${index}-${slot.kind === "existing" ? slot.url : slot.preview}`}
+                        className="relative"
+                      >
                         <RadioGroupItem
                           value={index.toString()}
                           id={`image-${index}`}
@@ -229,7 +320,7 @@ export default function ChooseCorrectImageQuestionEditorDialog({
                           }`}
                         >
                           <img
-                            src={img.preview}
+                            src={previewForSlot(slot)}
                             alt={`Option ${index + 1}`}
                             className="w-full h-24 object-cover"
                           />
@@ -243,7 +334,10 @@ export default function ChooseCorrectImageQuestionEditorDialog({
 
             {/* Error Message */}
             {error && (
-              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg">
+              <div
+                className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg"
+                data-ocid="choose_image_question.error_state"
+              >
                 {error}
               </div>
             )}
@@ -254,14 +348,19 @@ export default function ChooseCorrectImageQuestionEditorDialog({
               variant="outline"
               onClick={handleCancel}
               disabled={isSubmitting}
+              data-ocid="choose_image_question.cancel_button"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              data-ocid="choose_image_question.submit_button"
+            >
               {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Create Question
+              {isEditMode ? "Save Changes" : "Create Question"}
             </Button>
           </DialogFooter>
         </form>

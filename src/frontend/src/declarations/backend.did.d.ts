@@ -96,6 +96,10 @@ export interface _SERVICE {
     [GameId, QuestionId],
     [] | [MatchWordToImageQuestion]
   >,
+  'updateChooseCorrectImageQuestion' : ActorMethod<
+    [GameId, string, string, Array<ExternalBlob>, bigint],
+    undefined
+  >,
   'updateGame' : ActorMethod<
     [
       GameId,
@@ -107,6 +111,10 @@ export interface _SERVICE {
       string,
       Array<string>,
     ],
+    undefined
+  >,
+  'updateQuestion' : ActorMethod<
+    [GameId, QuestionId, ExternalBlob, Array<Option>, Option],
     undefined
   >,
 }

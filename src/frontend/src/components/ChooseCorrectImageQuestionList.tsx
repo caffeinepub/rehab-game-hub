@@ -1,29 +1,49 @@
 import type { ChooseCorrectImageQuestion } from "@/backend";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Pencil } from "lucide-react";
 
 interface ChooseCorrectImageQuestionListProps {
   questions: ChooseCorrectImageQuestion[];
+  onEdit: (question: ChooseCorrectImageQuestion) => void;
 }
 
 export default function ChooseCorrectImageQuestionList({
   questions,
+  onEdit,
 }: ChooseCorrectImageQuestionListProps) {
   return (
     <div className="space-y-6">
-      {questions.map((question) => {
+      {questions.map((question, idx) => {
         // Convert bigint to number for UI usage
         const correctIdx = Number(question.correctImageIndex);
 
         return (
-          <Card key={question.id} className="p-6">
-            <div className="mb-4">
-              <h3 className="text-xl font-bold text-foreground mb-1">
-                Word: {question.word}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Question ID: {question.id} • {question.images.length} images
-              </p>
+          <Card
+            key={question.id}
+            className="p-6"
+            data-ocid={`choose_image_question.item.${idx + 1}`}
+          >
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-bold text-foreground mb-1">
+                  Word: {question.word}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Question ID: {question.id} • {question.images.length} images
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex-shrink-0 gap-1.5"
+                onClick={() => onEdit(question)}
+                data-ocid={`choose_image_question.edit_button.${idx + 1}`}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
+              </Button>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
