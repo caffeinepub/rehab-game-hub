@@ -73,37 +73,14 @@ export default function ChooseCorrectImageQuestionEditorDialog({
     const files = Array.from(e.target.files || []);
 
     for (const file of files) {
-      // In create mode, enforce 3-image limit
-      if (!isEditMode) {
-        setImageSlots((prev) => {
-          if (prev.length >= 3) {
-            setError("Maximum 3 images allowed");
-            return prev;
-          }
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            setImageSlots((current) => {
-              if (current.length >= 3) return current;
-              return [
-                ...current,
-                { kind: "new", file, preview: reader.result as string },
-              ];
-            });
-          };
-          reader.readAsDataURL(file);
-          return prev;
-        });
-      } else {
-        // In edit mode, no limit
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setImageSlots((current) => [
-            ...current,
-            { kind: "new", file, preview: reader.result as string },
-          ]);
-        };
-        reader.readAsDataURL(file);
-      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageSlots((current) => [
+          ...current,
+          { kind: "new", file, preview: reader.result as string },
+        ]);
+      };
+      reader.readAsDataURL(file);
     }
 
     setError(null);
@@ -128,13 +105,8 @@ export default function ChooseCorrectImageQuestionEditorDialog({
       return;
     }
 
-    if (!isEditMode && imageSlots.length !== 3) {
-      setError("Exactly 3 images are required");
-      return;
-    }
-
-    if (isEditMode && imageSlots.length < 1) {
-      setError("At least 1 image is required");
+    if (imageSlots.length < 2) {
+      setError("At least 2 images are required");
       return;
     }
 
@@ -198,7 +170,7 @@ export default function ChooseCorrectImageQuestionEditorDialog({
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   // Whether we show the upload zone
-  const canAddMore = isEditMode || imageSlots.length < 3;
+  const canAddMore = true;
   const previewForSlot = (slot: ImageSlot) =>
     slot.kind === "existing" ? slot.url : slot.preview;
 
@@ -210,9 +182,8 @@ export default function ChooseCorrectImageQuestionEditorDialog({
             {isEditMode ? "Edit Question" : "Create New Question"}
           </DialogTitle>
           <DialogDescription>
-            {isEditMode
-              ? "Update the word and images. Select which image correctly matches the word."
-              : "Enter a word and upload exactly 3 images. Select which image correctly matches the word."}
+            Enter a word and upload at least 2 images. Select which image
+            correctly matches the word.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -232,9 +203,7 @@ export default function ChooseCorrectImageQuestionEditorDialog({
 
             {/* Image Slots */}
             <div className="space-y-2">
-              <Label>
-                Images {isEditMode ? "(any number)" : "(exactly 3)"} *
-              </Label>
+              <Label>Images (minimum 2) *</Label>
 
               {imageSlots.length > 0 && (
                 <div className="grid grid-cols-3 gap-3 mb-3">
@@ -269,8 +238,7 @@ export default function ChooseCorrectImageQuestionEditorDialog({
                     htmlFor="images"
                     className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
                   >
-                    Click to upload images
-                    {!isEditMode && ` (${imageSlots.length}/3)`}
+                    Click to upload images ({imageSlots.length} added)
                   </Label>
                   <Input
                     id="images"
@@ -281,11 +249,9 @@ export default function ChooseCorrectImageQuestionEditorDialog({
                     onChange={handleImageAdd}
                     data-ocid="choose_image_question.upload_button"
                   />
-                  {!isEditMode && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      You need exactly 3 images
-                    </p>
-                  )}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Minimum 2 images required
+                  </p>
                 </div>
               )}
             </div>

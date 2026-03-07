@@ -2,36 +2,42 @@
 
 ## Current State
 
-The app has two predefined games: Match Word to Image and Choose Correct Image. Both have question lists rendered in the Game Manager. Questions can be created via editor dialogs but cannot be edited after creation. The backend has `createQuestion` and `createChooseCorrectImageQuestion` but no update methods. The frontend question list components display questions as read-only cards.
+Two predefined games exist:
+1. **Match Word to Image** — shows an image, player picks the correct word from 3 inline options
+2. **Choose Correct Image** — shows a word, player picks the correct image from multiple image options
+
+Both games currently enforce a hard minimum of exactly 3 options/images:
+- Backend `createQuestion` traps if `options.size() != 3`
+- Backend `createChooseCorrectImageQuestion` traps if `images.size() != 3`
+- Frontend editor dialogs enforce "exactly 3" in validation
+- Frontend game components initialize option states with a hardcoded array of 3
 
 ## Requested Changes (Diff)
 
 ### Add
-- Backend: `updateQuestion(gameId, questionId, image, options, correctOption)` method for MatchWordToImage questions
-- Backend: `updateChooseCorrectImageQuestion(gameId, questionId, word, images, correctImageIndex)` method for ChooseCorrectImage questions
-- Frontend: Edit button on each question card in MatchWordToImageQuestionList
-- Frontend: Edit button on each question card in ChooseCorrectImageQuestionList
-- Frontend: Edit dialog for MatchWordToImage that pre-fills all existing fields (image, 3 words, correct word); allows replacing the image or keeping the existing one
-- Frontend: Edit dialog for ChooseCorrectImage that pre-fills all fields (word, images, correct index); allows adding/removing images and changing correct selection
-- Frontend: `useUpdateQuestion` and `useUpdateChooseCorrectImageQuestion` hooks in useQueries.ts
-- GameManagerPage: Wire edit state — track which question is being edited and open the correct dialog
+- Nothing new to add
 
 ### Modify
-- MatchWordToImageQuestionList: Accept an `onEdit` callback and render an edit button per card
-- ChooseCorrectImageQuestionList: Accept an `onEdit` callback and render an edit button per card
-- MatchWordToImageQuestionEditorDialog: Support both create and edit mode; when in edit mode, pre-fill fields and call update instead of create
-- ChooseCorrectImageQuestionEditorDialog: Support both create and edit mode; when in edit mode, pre-fill fields and call update instead of create
-- GameManagerPage: Pass edit handlers to list components and dialogs
+- **Backend `createQuestion`**: Change validation from `options.size() != 3` to `options.size() < 2` (minimum 2, no enforced maximum)
+- **Backend `createChooseCorrectImageQuestion`**: Change validation from `images.size() != 3` to `images.size() < 2` (minimum 2, no enforced maximum)
+- **MatchWordToImageQuestionEditorDialog**: Make Option 3 optional; allow saving with 2 filled options; update label from "exactly 3" to "2 to 3 options"; update radio group to only show filled options; update validation error message
+- **ChooseCorrectImageQuestionEditorDialog**: Remove the 3-image cap in create mode; allow saving with as few as 2 images; update label and helper text from "exactly 3" to "minimum 2"; update validation error message
+- **MatchWordToImageGame**: Initialize `optionStates` dynamically based on actual number of options instead of hardcoded `["idle","idle","idle"]`; same for `advanceToNext` reset
 
 ### Remove
-- Nothing removed
+- Nothing to remove
 
 ## Implementation Plan
 
-1. Add `updateQuestion` and `updateChooseCorrectImageQuestion` to `main.mo`
-2. Add `useUpdateQuestion` and `useUpdateChooseCorrectImageQuestion` hooks in `useQueries.ts`
-3. Update `MatchWordToImageQuestionEditorDialog` to accept an optional `initialQuestion` prop; when present, switch to edit mode (pre-fill fields, call update mutation)
-4. Update `ChooseCorrectImageQuestionEditorDialog` similarly with optional `initialQuestion` prop
-5. Update `MatchWordToImageQuestionList` to accept `onEdit(question)` and show an Edit button per card
-6. Update `ChooseCorrectImageQuestionList` to accept `onEdit(question)` and show an Edit button per card
-7. Update `GameManagerPage` to hold `editingMatchWordQuestion` and `editingChooseImageQuestion` state, pass them through to dialogs, and wire edit callbacks from lists
+1. Regenerate backend Motoko with relaxed minimum (2) for both `createQuestion` and `createChooseCorrectImageQuestion`
+2. Update `MatchWordToImageQuestionEditorDialog`:
+   - Make option 3 input not `required`; update label to "2–3 word options"
+   - Change validation: allow 2 or 3 non-empty options (filter non-empty, check >= 2)
+   - Radio group only renders options that have text
+3. Update `ChooseCorrectImageQuestionEditorDialog`:
+   - Remove 3-image cap in create mode (allow more than 3)
+   - Change validation: require >= 2 images in both create and edit modes
+   - Update description text to say "minimum 2 images"
+4. Update `MatchWordToImageGame`:
+   - Replace all hardcoded `["idle","idle","idle"]` with `Array(currentQuestion.options.length).fill("idle")`
+   - Ensure `advanceToNext` reset also uses dynamic length

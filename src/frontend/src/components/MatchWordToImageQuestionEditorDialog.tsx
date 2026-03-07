@@ -105,8 +105,8 @@ export default function MatchWordToImageQuestionEditorDialog({
       (o) => o.length > 0,
     );
 
-    if (options.length !== 3) {
-      setError("Please provide exactly 3 options");
+    if (options.length < 2) {
+      setError("Please provide at least 2 options");
       return;
     }
 
@@ -182,8 +182,8 @@ export default function MatchWordToImageQuestionEditorDialog({
             {isEditMode ? "Edit Question" : "Create New Question"}
           </DialogTitle>
           <DialogDescription>
-            Upload an image and provide three word options. Select which option
-            is correct.
+            Upload an image and provide two or three word options. Select which
+            option is correct.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -230,7 +230,7 @@ export default function MatchWordToImageQuestionEditorDialog({
 
             {/* Options */}
             <div className="space-y-4">
-              <Label>Word Options (exactly 3) *</Label>
+              <Label>Word Options (2–3) *</Label>
               <div className="space-y-3">
                 <Input
                   placeholder="Option 1"
@@ -255,14 +255,13 @@ export default function MatchWordToImageQuestionEditorDialog({
                   required
                 />
                 <Input
-                  placeholder="Option 3"
+                  placeholder="Option 3 (optional)"
                   value={option3}
                   onChange={(e) => {
                     setOption3(e.target.value);
                     if (correctOption === option3)
                       setCorrectOption(e.target.value);
                   }}
-                  required
                 />
               </div>
             </div>
@@ -275,27 +274,24 @@ export default function MatchWordToImageQuestionEditorDialog({
                 onValueChange={setCorrectOption}
               >
                 <div className="space-y-2">
-                  {(["option-1", "option-2", "option-3"] as const).map(
-                    (key, index) => {
-                      const opt = [option1, option2, option3][index];
-                      return (
-                        <div key={key} className="flex items-center space-x-2">
-                          <RadioGroupItem
-                            value={opt ?? ""}
-                            id={`option-${index}`}
-                            disabled={!opt?.trim()}
-                          />
-                          <Label
-                            htmlFor={`option-${index}`}
-                            className={`flex-1 ${!opt?.trim() ? "text-muted-foreground" : ""}`}
-                          >
-                            {opt?.trim() ||
-                              `Option ${index + 1} (enter text above)`}
-                          </Label>
-                        </div>
-                      );
-                    },
-                  )}
+                  {[
+                    { opt: option1, pos: 1 },
+                    { opt: option2, pos: 2 },
+                    { opt: option3, pos: 3 },
+                  ].map(({ opt, pos }) => {
+                    if (!opt?.trim()) return null;
+                    return (
+                      <div
+                        key={`option-pos-${pos}`}
+                        className="flex items-center space-x-2"
+                      >
+                        <RadioGroupItem value={opt} id={`option-${pos}`} />
+                        <Label htmlFor={`option-${pos}`} className="flex-1">
+                          {opt}
+                        </Label>
+                      </div>
+                    );
+                  })}
                 </div>
               </RadioGroup>
             </div>

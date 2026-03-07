@@ -1,29 +1,21 @@
-import Text "mo:core/Text";
-import Nat "mo:core/Nat";
-import Map "mo:core/Map";
 import List "mo:core/List";
+import Map "mo:core/Map";
+import Nat "mo:core/Nat";
 import Storage "blob-storage/Storage";
 
 module {
-  type Game = {
-    id : Text;
-    name : Text;
-    description : Text;
-    icon : Text;
-    badges : [Text];
-    primaryColor : Text;
-    secondaryColor : Text;
-    tags : [Text];
-  };
+  type GameId = Text;
+  type QuestionId = Text;
+  type Option = Text;
 
-  type MatchWordToImageQuestion = {
-    id : Text;
+  type OldMatchWordToImageQuestion = {
+    id : QuestionId;
     image : Storage.ExternalBlob;
-    options : [Text];
-    correctOption : Text;
+    options : [Option];
+    correctOption : Option;
   };
 
-  type ChooseCorrectImageQuestion = {
+  type OldChooseCorrectImageQuestion = {
     id : Text;
     word : Text;
     images : [Storage.ExternalBlob];
@@ -31,13 +23,22 @@ module {
   };
 
   type OldActor = {
-    persistentGames : Map.Map<Text, Game>;
-    persistentQuestions : Map.Map<Text, List.List<MatchWordToImageQuestion>>;
-    persistentChooseCorrectImageQuestions : Map.Map<Text, List.List<ChooseCorrectImageQuestion>>;
+    persistentGames : Map.Map<GameId, {
+                              id : GameId;
+                              name : Text;
+                              description : Text;
+                              icon : Text;
+                              badges : [Text];
+                              primaryColor : Text;
+                              secondaryColor : Text;
+                              tags : [Text];
+                            }>;
+    persistentQuestions : Map.Map<GameId, List.List<OldMatchWordToImageQuestion>>;
+    persistentChooseCorrectImageQuestions : Map.Map<GameId, List.List<OldChooseCorrectImageQuestion>>;
     _nextQuestionId : Nat;
   };
 
-  public func run(old : OldActor) : OldActor {
-    old;
+  public func run(old : OldActor) : {} {
+    {};
   };
 };

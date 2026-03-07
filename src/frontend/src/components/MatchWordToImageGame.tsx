@@ -29,11 +29,7 @@ export default function MatchWordToImageGame({
   >([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [optionStates, setOptionStates] = useState<OptionState[]>([
-    "idle",
-    "idle",
-    "idle",
-  ]);
+  const [optionStates, setOptionStates] = useState<OptionState[]>([]);
   const [canProceed, setCanProceed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [gameComplete, setGameComplete] = useState(false);
@@ -115,7 +111,7 @@ export default function MatchWordToImageGame({
     if (currentQuestionIndex < shuffledQuestions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
       setSelectedOption(null);
-      setOptionStates(["idle", "idle", "idle"]);
+      setOptionStates([]);
       setCanProceed(false);
     } else {
       setGameComplete(true);
@@ -126,7 +122,9 @@ export default function MatchWordToImageGame({
     if (canProceed || selectedOption !== null) return;
 
     setSelectedOption(index);
-    const newStates: OptionState[] = ["idle", "idle", "idle"];
+    const newStates: OptionState[] = Array(currentQuestion.options.length).fill(
+      "idle",
+    );
 
     if (index === currentQuestion.correctIndex) {
       newStates[index] = "correct";
@@ -146,7 +144,7 @@ export default function MatchWordToImageGame({
       // Allow unlimited retries - reset after a short delay
       resetTimeoutRef.current = window.setTimeout(() => {
         setSelectedOption(null);
-        setOptionStates(["idle", "idle", "idle"]);
+        setOptionStates(Array(currentQuestion.options.length).fill("idle"));
         resetTimeoutRef.current = null;
       }, 800);
     }
@@ -157,7 +155,7 @@ export default function MatchWordToImageGame({
   const handleRestart = () => {
     setCurrentQuestionIndex(0);
     setSelectedOption(null);
-    setOptionStates(["idle", "idle", "idle"]);
+    setOptionStates([]);
     setCanProceed(false);
     setGameComplete(false);
     setScore(0);
@@ -261,9 +259,15 @@ export default function MatchWordToImageGame({
           <h3 className="text-lg font-semibold text-foreground mb-6 text-center">
             Select the correct word for this image:
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+          <div
+            className={`grid grid-cols-1 gap-3 mb-6 ${
+              currentQuestion.options.length === 2
+                ? "sm:grid-cols-2"
+                : "sm:grid-cols-3"
+            }`}
+          >
             {currentQuestion.options.map((option, index) => {
-              const state = optionStates[index];
+              const state = optionStates[index] ?? "idle";
 
               return (
                 <button

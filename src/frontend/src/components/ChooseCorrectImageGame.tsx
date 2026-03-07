@@ -296,7 +296,13 @@ export default function ChooseCorrectImageGame({
         </div>
 
         {/* Image Options */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div
+          className={`grid gap-4 mb-8 ${
+            currentQuestion.imageUrls.length <= 2
+              ? "grid-cols-2"
+              : "grid-cols-3"
+          }`}
+        >
           {currentQuestion.imageUrls.map((imageUrl, index) => {
             const state = imageStates[index];
             return (

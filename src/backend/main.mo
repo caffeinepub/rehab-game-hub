@@ -1,15 +1,16 @@
 import Array "mo:core/Array";
 import Map "mo:core/Map";
 import List "mo:core/List";
-import Iter "mo:core/Iter";
 import Text "mo:core/Text";
+import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
-
+import Nat "mo:core/Nat";
 
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
+import Migration "migration";
 
-
+(with migration = Migration.run)
 actor {
   include MixinStorage();
 
@@ -31,7 +32,16 @@ actor {
 
   let persistentGames = Map.empty<GameId, Game>();
 
-  public shared ({ caller }) func createGame(id : GameId, name : Text, description : Text, icon : Text, badges : [Text], primaryColor : Text, secondaryColor : Text, tags : [Text]) : async () {
+  public shared ({ caller }) func createGame(
+    id : GameId,
+    name : Text,
+    description : Text,
+    icon : Text,
+    badges : [Text],
+    primaryColor : Text,
+    secondaryColor : Text,
+    tags : [Text],
+  ) : async () {
     let newGame = {
       id;
       name;
@@ -45,7 +55,16 @@ actor {
     persistentGames.add(id, newGame);
   };
 
-  public shared ({ caller }) func updateGame(id : GameId, name : Text, description : Text, icon : Text, badges : [Text], primaryColor : Text, secondaryColor : Text, tags : [Text]) : async () {
+  public shared ({ caller }) func updateGame(
+    id : GameId,
+    name : Text,
+    description : Text,
+    icon : Text,
+    badges : [Text],
+    primaryColor : Text,
+    secondaryColor : Text,
+    tags : [Text],
+  ) : async () {
     if (persistentGames.containsKey(id)) {
       let updatedGame = {
         id;
@@ -101,9 +120,15 @@ actor {
   let persistentQuestions = Map.empty<GameId, List.List<MatchWordToImageQuestion>>();
   var _nextQuestionId = 0;
 
-  public shared ({ caller }) func createQuestion(gameId : GameId, image : Storage.ExternalBlob, options : [Option], correctOption : Option) : async QuestionId {
-    if (options.size() != 3) {
-      Runtime.trap("Exactly 3 options are required.");
+  public shared ({ caller }) func createQuestion(
+    gameId : GameId,
+    image : Storage.ExternalBlob,
+    options : [Option],
+    correctOption : Option,
+  ) : async QuestionId {
+    // Now at least 2 options required, leverage array size typing
+    if (options.size() < 2) {
+      Runtime.trap("At least 2 options are required.");
     };
 
     let questionId = _nextQuestionId.toText();
@@ -129,7 +154,18 @@ actor {
     questionId;
   };
 
-  public shared ({ caller }) func updateQuestion(gameId : GameId, questionId : QuestionId, image : Storage.ExternalBlob, options : [Option], correctOption : Option) : async () {
+  public shared ({ caller }) func updateQuestion(
+    gameId : GameId,
+    questionId : QuestionId,
+    image : Storage.ExternalBlob,
+    options : [Option],
+    correctOption : Option,
+  ) : async () {
+    // Now at least 2 options required, leverage array size typing
+    if (options.size() < 2) {
+      Runtime.trap("At least 2 options are required.");
+    };
+
     if (not persistentQuestions.containsKey(gameId)) {
       Runtime.trap("Game with specified ID does not exist.");
     };
@@ -201,13 +237,20 @@ actor {
 
   let persistentChooseCorrectImageQuestions = Map.empty<GameId, List.List<ChooseCorrectImageQuestion>>();
 
-  public shared ({ caller }) func createChooseCorrectImageQuestion(gameId : GameId, word : Text, images : [Storage.ExternalBlob], correctImageIndex : Nat) : async ChooseCorrectImageQuestion {
-    if (images.size() != 3) {
-      Runtime.trap("Exactly 3 images are required.");
+  public shared ({ caller }) func createChooseCorrectImageQuestion(
+    gameId : GameId,
+    word : Text,
+    images : [Storage.ExternalBlob],
+    correctImageIndex : Nat,
+  ) : async ChooseCorrectImageQuestion {
+    // Now at least 2 images required, leverage array size typing
+    if (images.size() < 2) {
+      Runtime.trap("At least 2 images are required.");
     };
 
-    if (correctImageIndex >= 3) {
-      Runtime.trap("Correct image index must be between 0 and 2.");
+    // Check index is within range!
+    if (correctImageIndex >= images.size()) {
+      Runtime.trap("Correct image index must be between 0 and " # (images.size() - 1).toText() # ".");
     };
 
     let newQuestion : ChooseCorrectImageQuestion = {
@@ -230,7 +273,23 @@ actor {
     newQuestion;
   };
 
-  public shared ({ caller }) func updateChooseCorrectImageQuestion(gameId : GameId, questionId : Text, word : Text, images : [Storage.ExternalBlob], correctImageIndex : Nat) : async () {
+  public shared ({ caller }) func updateChooseCorrectImageQuestion(
+    gameId : GameId,
+    questionId : Text,
+    word : Text,
+    images : [Storage.ExternalBlob],
+    correctImageIndex : Nat,
+  ) : async () {
+    // Now at least 2 images required, leverage array size typing
+    if (images.size() < 2) {
+      Runtime.trap("At least 2 images are required.");
+    };
+
+    // Check index is within range!
+    if (correctImageIndex >= images.size()) {
+      Runtime.trap("Correct image index must be between 0 and " # (images.size() - 1).toText() # ".");
+    };
+
     if (not persistentChooseCorrectImageQuestions.containsKey(gameId)) {
       Runtime.trap("Game with specified ID does not exist.");
     };
