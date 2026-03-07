@@ -3,8 +3,8 @@ import Map "mo:core/Map";
 import List "mo:core/List";
 import Text "mo:core/Text";
 import Iter "mo:core/Iter";
-import Runtime "mo:core/Runtime";
 import Nat "mo:core/Nat";
+import Runtime "mo:core/Runtime";
 
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
@@ -30,7 +30,27 @@ actor {
     tags : [Text];
   };
 
-  let persistentGames = Map.empty<GameId, Game>();
+  public type QuestionId = Text;
+  public type Option = Text;
+
+  public type MatchWordToImageQuestion = {
+    id : QuestionId;
+    image : Storage.ExternalBlob;
+    options : [Option];
+    correctOption : Option;
+  };
+
+  public type ChooseCorrectImageQuestion = {
+    id : Text;
+    word : Text;
+    images : [Storage.ExternalBlob];
+    correctImageIndex : Nat;
+  };
+
+  var persistentGames = Map.empty<GameId, Game>();
+  var persistentQuestions = Map.empty<GameId, List.List<MatchWordToImageQuestion>>();
+  var persistentChooseCorrectImageQuestions = Map.empty<GameId, List.List<ChooseCorrectImageQuestion>>();
+  var _nextQuestionId = 0;
 
   public shared ({ caller }) func createGame(
     id : GameId,
@@ -107,26 +127,12 @@ actor {
     );
   };
 
-  public type QuestionId = Text;
-  public type Option = Text;
-
-  public type MatchWordToImageQuestion = {
-    id : QuestionId;
-    image : Storage.ExternalBlob;
-    options : [Option];
-    correctOption : Option;
-  };
-
-  let persistentQuestions = Map.empty<GameId, List.List<MatchWordToImageQuestion>>();
-  var _nextQuestionId = 0;
-
   public shared ({ caller }) func createQuestion(
     gameId : GameId,
     image : Storage.ExternalBlob,
     options : [Option],
     correctOption : Option,
   ) : async QuestionId {
-    // Now at least 2 options required, leverage array size typing
     if (options.size() < 2) {
       Runtime.trap("At least 2 options are required.");
     };
@@ -161,7 +167,6 @@ actor {
     options : [Option],
     correctOption : Option,
   ) : async () {
-    // Now at least 2 options required, leverage array size typing
     if (options.size() < 2) {
       Runtime.trap("At least 2 options are required.");
     };
@@ -179,11 +184,11 @@ actor {
 
     switch (persistentQuestions.get(gameId)) {
       case (null) {
-        Runtime.trap("No questions found for game. Should not happen, because game existence is checked before. Try refreshing the page to be sure you have the only saved reference to the actor state.");
+        Runtime.trap("No questions found for game. This should not happen, as game existence is checked before.");
       };
       case (?questions) {
         if (questions.isEmpty()) {
-          Runtime.trap("No questions found for game. Should not happen, because game existence is checked before. Try refreshing the page to be sure you have the only saved reference to the actor state.");
+          Runtime.trap("No questions found for game. This should not happen, as game existence is checked before.");
         };
 
         var found = false;
@@ -228,27 +233,16 @@ actor {
     };
   };
 
-  public type ChooseCorrectImageQuestion = {
-    id : Text;
-    word : Text;
-    images : [Storage.ExternalBlob];
-    correctImageIndex : Nat;
-  };
-
-  let persistentChooseCorrectImageQuestions = Map.empty<GameId, List.List<ChooseCorrectImageQuestion>>();
-
   public shared ({ caller }) func createChooseCorrectImageQuestion(
     gameId : GameId,
     word : Text,
     images : [Storage.ExternalBlob],
     correctImageIndex : Nat,
   ) : async ChooseCorrectImageQuestion {
-    // Now at least 2 images required, leverage array size typing
     if (images.size() < 2) {
       Runtime.trap("At least 2 images are required.");
     };
 
-    // Check index is within range!
     if (correctImageIndex >= images.size()) {
       Runtime.trap("Correct image index must be between 0 and " # (images.size() - 1).toText() # ".");
     };
@@ -280,12 +274,10 @@ actor {
     images : [Storage.ExternalBlob],
     correctImageIndex : Nat,
   ) : async () {
-    // Now at least 2 images required, leverage array size typing
     if (images.size() < 2) {
       Runtime.trap("At least 2 images are required.");
     };
 
-    // Check index is within range!
     if (correctImageIndex >= images.size()) {
       Runtime.trap("Correct image index must be between 0 and " # (images.size() - 1).toText() # ".");
     };
@@ -303,11 +295,11 @@ actor {
 
     switch (persistentChooseCorrectImageQuestions.get(gameId)) {
       case (null) {
-        Runtime.trap("No questions found for game. Should not happen, because game existence is checked for that before!");
+        Runtime.trap("No questions found for game. This should not happen, as game existence is checked before.");
       };
       case (?questions) {
         if (questions.isEmpty()) {
-          Runtime.trap("No questions found for game. Should not happen, because game existence is checked for that before!");
+          Runtime.trap("No questions found for game. This should not happen, as game existence is checked before.");
         };
 
         var found = false;
