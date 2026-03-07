@@ -1,5 +1,6 @@
 import type { ChooseCorrectImageQuestion } from "@/backend";
 import { Card } from "@/components/ui/card";
+import { useGameSounds } from "@/hooks/useGameSounds";
 import { shuffleArray } from "@/lib/shuffle";
 import { CheckCircle2, Loader2, Trophy, XCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -34,6 +35,7 @@ export default function ChooseCorrectImageGame({
   const [score, setScore] = useState(0);
   const [wrongAttempts, setWrongAttempts] = useState(0);
   const autoAdvanceTimeoutRef = useRef<number | null>(null);
+  const { playCorrect, playWrong } = useGameSounds();
 
   // Initialize and shuffle questions on mount
   useEffect(() => {
@@ -130,6 +132,7 @@ export default function ChooseCorrectImageGame({
       newStates[index] = "correct";
       setCanProceed(true);
       setScore((prev) => prev + 1);
+      playCorrect();
       // Auto-advance after 3 seconds
       autoAdvanceTimeoutRef.current = window.setTimeout(() => {
         advanceToNext();
@@ -138,6 +141,7 @@ export default function ChooseCorrectImageGame({
     } else {
       newStates[index] = "incorrect";
       setWrongAttempts((prev) => prev + 1);
+      playWrong();
       // Allow unlimited retries - reset after a short delay
       setTimeout(() => {
         setSelectedImage(null);

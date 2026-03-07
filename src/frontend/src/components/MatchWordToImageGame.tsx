@@ -1,5 +1,6 @@
 import type { MatchWordToImageQuestion } from "@/backend";
 import { Card } from "@/components/ui/card";
+import { useGameSounds } from "@/hooks/useGameSounds";
 import { blobToObjectURL } from "@/lib/externalBlob";
 import { shuffleArray, shuffleOptions } from "@/lib/shuffle";
 import { CheckCircle2, Loader2, Trophy, XCircle } from "lucide-react";
@@ -41,6 +42,7 @@ export default function MatchWordToImageGame({
   const resetTimeoutRef = useRef<number | null>(null);
   const autoAdvanceTimeoutRef = useRef<number | null>(null);
   const shuffledQuestionsRef = useRef<ShuffledQuestion[]>([]);
+  const { playCorrect, playWrong } = useGameSounds();
 
   // Initialize and shuffle questions on mount
   useEffect(() => {
@@ -130,6 +132,7 @@ export default function MatchWordToImageGame({
       newStates[index] = "correct";
       setCanProceed(true);
       setScore((prev) => prev + 1);
+      playCorrect();
       speakWord(currentQuestion.options[index]);
       // Auto-advance after 3 seconds
       autoAdvanceTimeoutRef.current = window.setTimeout(() => {
@@ -139,6 +142,7 @@ export default function MatchWordToImageGame({
     } else {
       newStates[index] = "incorrect";
       setWrongAttempts((prev) => prev + 1);
+      playWrong();
       // Allow unlimited retries - reset after a short delay
       resetTimeoutRef.current = window.setTimeout(() => {
         setSelectedOption(null);

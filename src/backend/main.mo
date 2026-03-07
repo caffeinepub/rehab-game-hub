@@ -4,12 +4,12 @@ import List "mo:core/List";
 import Iter "mo:core/Iter";
 import Text "mo:core/Text";
 import Runtime "mo:core/Runtime";
-import Migration "migration";
+
 
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
 
-(with migration = Migration.run)
+
 actor {
   include MixinStorage();
 
