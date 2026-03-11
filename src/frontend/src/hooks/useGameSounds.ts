@@ -14,11 +14,11 @@ export function useGameSounds() {
       oscillator.connect(gain);
       gain.connect(ctx.destination);
 
-      // Short high-pitched ding
+      // Short high-pitched ding (raised pitch)
       oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+      oscillator.frequency.setValueAtTime(1760, ctx.currentTime);
       oscillator.frequency.exponentialRampToValueAtTime(
-        1320,
+        2640,
         ctx.currentTime + 0.12,
       );
 

@@ -5,6 +5,7 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 import AppLayout from "./components/AppLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
 import GameLaunchPage from "./pages/GameLaunchPage";
 import GameManagerPage from "./pages/GameManagerPage";
 import HomePage from "./pages/HomePage";
@@ -19,9 +20,15 @@ const indexRoute = createRoute({
   component: HomePage,
 });
 
-const managerRoute = createRoute({
+const managerLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/manager",
+  component: ProtectedRoute,
+});
+
+const managerIndexRoute = createRoute({
+  getParentRoute: () => managerLayoutRoute,
+  path: "/",
   component: GameManagerPage,
 });
 
@@ -33,7 +40,7 @@ const gameLaunchRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
-  managerRoute,
+  managerLayoutRoute.addChildren([managerIndexRoute]),
   gameLaunchRoute,
 ]);
 

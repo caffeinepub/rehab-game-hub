@@ -129,8 +129,8 @@ export function useCreateQuestion() {
     }) => {
       if (!actor) throw new Error("Actor not initialized");
 
-      if (options.length !== 3) {
-        throw new Error("Exactly 3 options are required");
+      if (options.length < 2) {
+        throw new Error("At least 2 options are required");
       }
 
       if (!options.includes(correctOption)) {
@@ -190,8 +190,8 @@ export function useCreateChooseCorrectImageQuestion() {
         throw new Error("Word cannot be empty");
       }
 
-      if (images.length !== 3) {
-        throw new Error("Exactly 3 images are required");
+      if (images.length < 2) {
+        throw new Error("At least 2 images are required");
       }
 
       if (correctImageIndex < 0 || correctImageIndex >= images.length) {
@@ -237,8 +237,8 @@ export function useUpdateQuestion() {
     }) => {
       if (!actor) throw new Error("Actor not initialized");
 
-      if (options.length !== 3) {
-        throw new Error("Exactly 3 options are required");
+      if (options.length < 2) {
+        throw new Error("At least 2 options are required");
       }
 
       if (!options.includes(correctOption)) {

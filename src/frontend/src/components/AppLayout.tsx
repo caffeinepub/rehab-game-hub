@@ -1,10 +1,13 @@
+import { Button } from "@/components/ui/button";
+import { useInternetIdentity } from "@/hooks/useInternetIdentity";
 import { ASSETS } from "@/lib/assets";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { Home, Settings } from "lucide-react";
+import { LogIn, LogOut, Settings } from "lucide-react";
 
 export default function AppLayout() {
   const router = useRouterState();
   const currentPath = router.location.pathname;
+  const { identity, clear } = useInternetIdentity();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -13,6 +16,7 @@ export default function AppLayout() {
           <div className="flex items-center justify-between">
             <Link
               to="/"
+              data-ocid="nav.home.link"
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
               <img
@@ -25,28 +29,42 @@ export default function AppLayout() {
               </h1>
             </Link>
             <nav className="flex items-center gap-2">
-              <Link
-                to="/"
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  currentPath === "/"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                }`}
-              >
-                <Home className="h-4 w-4" />
-                <span className="font-medium">Home</span>
-              </Link>
-              <Link
-                to="/manager"
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  currentPath === "/manager"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                }`}
-              >
-                <Settings className="h-4 w-4" />
-                <span className="font-medium">Manager</span>
-              </Link>
+              {identity ? (
+                <>
+                  <Link
+                    to="/manager"
+                    data-ocid="nav.manager.link"
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                      currentPath.startsWith("/manager")
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                    }`}
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span className="font-medium">Manager</span>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => clear()}
+                    data-ocid="nav.logout.button"
+                    className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                    title="Logout"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span className="hidden sm:inline font-medium">Logout</span>
+                  </Button>
+                </>
+              ) : (
+                <Link
+                  to="/manager"
+                  data-ocid="nav.signin.link"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                >
+                  <LogIn className="h-4 w-4" />
+                  <span className="font-medium">Admin Sign In</span>
+                </Link>
+              )}
             </nav>
           </div>
         </div>

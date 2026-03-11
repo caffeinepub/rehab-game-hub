@@ -38,7 +38,7 @@ export default function MatchWordToImageGame({
   const resetTimeoutRef = useRef<number | null>(null);
   const autoAdvanceTimeoutRef = useRef<number | null>(null);
   const shuffledQuestionsRef = useRef<ShuffledQuestion[]>([]);
-  const { playCorrect, playWrong } = useGameSounds();
+  const { playWrong } = useGameSounds();
 
   // Initialize and shuffle questions on mount
   useEffect(() => {
@@ -130,7 +130,6 @@ export default function MatchWordToImageGame({
       newStates[index] = "correct";
       setCanProceed(true);
       setScore((prev) => prev + 1);
-      playCorrect();
       speakWord(currentQuestion.options[index]);
       // Auto-advance after 3 seconds
       autoAdvanceTimeoutRef.current = window.setTimeout(() => {
