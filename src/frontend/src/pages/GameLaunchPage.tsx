@@ -179,12 +179,21 @@ export default function GameLaunchPage() {
     return (
       <div
         ref={gameContainerRef}
-        className={`flex items-start gap-4 px-4 py-8 min-h-screen ${
+        className={`flex flex-col md:flex-row items-start gap-4 px-4 py-4 md:py-8 min-h-screen ${
           isFullscreen ? "bg-background" : ""
         }`}
       >
-        <BackButton />
-        <div className="flex-1 min-w-0">
+        {/* Mobile-only top button bar */}
+        <div className="flex md:hidden w-full justify-between items-center">
+          <BackButton />
+          <FullscreenButton />
+        </div>
+        {/* Desktop-only left back button */}
+        <div className="hidden md:block">
+          <BackButton />
+        </div>
+        {/* Game content */}
+        <div className="flex-1 min-w-0 w-full">
           {!configDone ? (
             <GameConfigScreen
               gameName={game.name}
@@ -203,7 +212,10 @@ export default function GameLaunchPage() {
             />
           )}
         </div>
-        <FullscreenButton />
+        {/* Desktop-only right fullscreen button */}
+        <div className="hidden md:block">
+          <FullscreenButton />
+        </div>
       </div>
     );
   }
@@ -221,12 +233,21 @@ export default function GameLaunchPage() {
     return (
       <div
         ref={gameContainerRef}
-        className={`flex items-start gap-4 px-4 py-8 min-h-screen ${
+        className={`flex flex-col md:flex-row items-start gap-4 px-4 py-4 md:py-8 min-h-screen ${
           isFullscreen ? "bg-background" : ""
         }`}
       >
-        <BackButton />
-        <div className="flex-1 min-w-0">
+        {/* Mobile-only top button bar */}
+        <div className="flex md:hidden w-full justify-between items-center">
+          <BackButton />
+          <FullscreenButton />
+        </div>
+        {/* Desktop-only left back button */}
+        <div className="hidden md:block">
+          <BackButton />
+        </div>
+        {/* Game content */}
+        <div className="flex-1 min-w-0 w-full">
           {!configDone ? (
             <GameConfigScreen
               gameName={game.name}
@@ -245,7 +266,10 @@ export default function GameLaunchPage() {
             />
           )}
         </div>
-        <FullscreenButton />
+        {/* Desktop-only right fullscreen button */}
+        <div className="hidden md:block">
+          <FullscreenButton />
+        </div>
       </div>
     );
   }
@@ -257,9 +281,16 @@ export default function GameLaunchPage() {
       (!chooseImageQuestions || chooseImageQuestions.length === 0))
   ) {
     return (
-      <div className="flex items-start gap-4 px-4 py-8 min-h-screen">
-        <BackButton />
-        <div className="flex-1 min-w-0 max-w-2xl">
+      <div className="flex flex-col md:flex-row items-start gap-4 px-4 py-4 md:py-8 min-h-screen">
+        {/* Mobile-only top button bar */}
+        <div className="flex md:hidden w-full justify-between items-center">
+          <BackButton />
+        </div>
+        {/* Desktop-only left back button */}
+        <div className="hidden md:block">
+          <BackButton />
+        </div>
+        <div className="flex-1 min-w-0 w-full max-w-2xl">
           <div className="bg-card rounded-lg border border-border p-12 text-center">
             <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-foreground mb-2">
@@ -276,9 +307,16 @@ export default function GameLaunchPage() {
   }
 
   return (
-    <div className="flex items-start gap-4 px-4 py-8 min-h-screen">
-      <BackButton />
-      <div className="flex-1 min-w-0 max-w-4xl">
+    <div className="flex flex-col md:flex-row items-start gap-4 px-4 py-4 md:py-8 min-h-screen">
+      {/* Mobile-only top button bar */}
+      <div className="flex md:hidden w-full justify-between items-center">
+        <BackButton />
+      </div>
+      {/* Desktop-only left back button */}
+      <div className="hidden md:block">
+        <BackButton />
+      </div>
+      <div className="flex-1 min-w-0 w-full max-w-4xl">
         <div className="bg-card rounded-lg border border-border overflow-hidden shadow-lg">
           <div className="p-8">
             <h1 className="text-4xl font-bold text-foreground mb-4">
