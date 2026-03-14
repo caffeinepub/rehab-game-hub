@@ -3,6 +3,7 @@ import type {
   ExternalBlob,
   Game,
   MatchWordToImageQuestion,
+  PlayerSession,
   QuestionId,
 } from "@/backend";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -307,6 +308,54 @@ export function useUpdateChooseCorrectImageQuestion() {
       queryClient.invalidateQueries({
         queryKey: ["chooseCorrectImageQuestions", variables.gameId],
       });
+    },
+  });
+}
+
+// Player session hooks
+
+export function useGetMyGameSessions() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<PlayerSession[]>({
+    queryKey: ["myGameSessions"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getMyGameSessions();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useSaveGameSession() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      gameId,
+      gameName,
+      correct,
+      wrong,
+      durationSeconds,
+    }: {
+      gameId: string;
+      gameName: string;
+      correct: number;
+      wrong: number;
+      durationSeconds: number;
+    }) => {
+      if (!actor) throw new Error("Actor not initialized");
+      await actor.saveGameSession(
+        gameId,
+        gameName,
+        BigInt(correct),
+        BigInt(wrong),
+        BigInt(durationSeconds),
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myGameSessions"] });
     },
   });
 }

@@ -24,20 +24,28 @@ export interface Game {
     description: string;
     secondaryColor: string;
 }
-export type GameId = string;
+export interface PlayerSession {
+    gameId: string;
+    correct: bigint;
+    durationSeconds: bigint;
+    timestamp: bigint;
+    gameName: string;
+    wrong: bigint;
+}
 export type Option = string;
 export type QuestionId = string;
-export interface ChooseCorrectImageQuestion {
-    id: string;
-    correctImageIndex: bigint;
-    word: string;
-    images: Array<ExternalBlob>;
-}
+export type GameId = string;
 export interface MatchWordToImageQuestion {
     id: QuestionId;
     correctOption: Option;
     image: ExternalBlob;
     options: Array<Option>;
+}
+export interface ChooseCorrectImageQuestion {
+    id: string;
+    correctImageIndex: bigint;
+    word: string;
+    images: Array<ExternalBlob>;
 }
 export interface backendInterface {
     createChooseCorrectImageQuestion(gameId: GameId, word: string, images: Array<ExternalBlob>, correctImageIndex: bigint): Promise<ChooseCorrectImageQuestion>;
@@ -48,7 +56,9 @@ export interface backendInterface {
     getAllQuestions(gameId: GameId): Promise<Array<MatchWordToImageQuestion>>;
     getGameById(id: GameId): Promise<Game>;
     getGamesByTag(tag: string): Promise<Array<Game>>;
+    getMyGameSessions(): Promise<Array<PlayerSession>>;
     getQuestion(gameId: GameId, questionId: QuestionId): Promise<MatchWordToImageQuestion | null>;
+    saveGameSession(gameId: string, gameName: string, correct: bigint, wrong: bigint, durationSeconds: bigint): Promise<void>;
     updateChooseCorrectImageQuestion(gameId: GameId, questionId: string, word: string, images: Array<ExternalBlob>, correctImageIndex: bigint): Promise<void>;
     updateGame(id: GameId, name: string, description: string, icon: string, badges: Array<string>, primaryColor: string, secondaryColor: string, tags: Array<string>): Promise<void>;
     updateQuestion(gameId: GameId, questionId: QuestionId, image: ExternalBlob, options: Array<Option>, correctOption: Option): Promise<void>;

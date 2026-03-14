@@ -1,10 +1,13 @@
 import ChooseCorrectImageGame from "@/components/ChooseCorrectImageGame";
+import GameConfigScreen from "@/components/GameConfigScreen";
 import MatchWordToImageGame from "@/components/MatchWordToImageGame";
 import { Button } from "@/components/ui/button";
+import { useInternetIdentity } from "@/hooks/useInternetIdentity";
 import {
   useGetAllChooseCorrectImageQuestions,
   useGetAllQuestions,
   useGetGameById,
+  useSaveGameSession,
 } from "@/hooks/useQueries";
 import {
   CHOOSE_CORRECT_IMAGE_GAME_ID,
@@ -25,9 +28,14 @@ export default function GameLaunchPage() {
   const { gameId } = useParams({ from: "/games/$gameId" });
   const { data: backendGame, isLoading: gameLoading } = useGetGameById(gameId);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [scoreSaved, setScoreSaved] = useState(false);
+  const [configDone, setConfigDone] = useState(false);
+  const [questionLimit, setQuestionLimit] = useState<number | null>(null);
   const gameContainerRef = useRef<HTMLDivElement>(null);
 
-  // Load questions based on game type
+  const { identity, login } = useInternetIdentity();
+  const saveGameSession = useSaveGameSession();
+
   const {
     data: matchWordQuestions,
     isLoading: matchWordLoading,
@@ -52,8 +60,30 @@ export default function GameLaunchPage() {
     (isMatchWordToImageGame && matchWordError) ||
     (isChooseCorrectImageGame && chooseImageError);
 
-  // Get game metadata - fall back to predefined if backend doesn't have it
   const game = getGameMetadata(gameId, backendGame);
+
+  const handleGameComplete = useCallback(
+    (correct: number, wrong: number, durationSeconds: number) => {
+      if (identity && game) {
+        saveGameSession.mutate(
+          { gameId, gameName: game.name, correct, wrong, durationSeconds },
+          { onSuccess: () => setScoreSaved(true) },
+        );
+      }
+    },
+    [identity, game, gameId, saveGameSession],
+  );
+
+  const handlePlayAgain = useCallback(() => {
+    setConfigDone(false);
+    setQuestionLimit(null);
+    setScoreSaved(false);
+  }, []);
+
+  const handleConfigStart = useCallback((count: number) => {
+    setQuestionLimit(count);
+    setConfigDone(true);
+  }, []);
 
   const handleFullscreenToggle = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -84,7 +114,6 @@ export default function GameLaunchPage() {
     );
   }
 
-  // Only show error if we don't have predefined metadata for this game
   if (error || !game) {
     return (
       <div className="container mx-auto px-4 py-12">
@@ -107,7 +136,6 @@ export default function GameLaunchPage() {
     );
   }
 
-  // Fullscreen button — sits to the right of the game area
   const FullscreenButton = () => (
     <button
       type="button"
@@ -124,7 +152,6 @@ export default function GameLaunchPage() {
     </button>
   );
 
-  // Back button — hidden in fullscreen
   const BackButton = () =>
     isFullscreen ? null : (
       <Link to="/">
@@ -139,53 +166,90 @@ export default function GameLaunchPage() {
       </Link>
     );
 
-  // Render Match Word to Image game
+  // Match Word to Image
   if (
     isMatchWordToImageGame &&
     matchWordQuestions &&
     matchWordQuestions.length > 0
   ) {
+    const activeQuestions = questionLimit
+      ? matchWordQuestions.slice(0, questionLimit)
+      : matchWordQuestions;
+
     return (
       <div
         ref={gameContainerRef}
-        className={`flex items-start gap-4 px-4 py-8 min-h-screen ${isFullscreen ? "bg-background" : ""}`}
+        className={`flex items-start gap-4 px-4 py-8 min-h-screen ${
+          isFullscreen ? "bg-background" : ""
+        }`}
       >
         <BackButton />
         <div className="flex-1 min-w-0">
-          <MatchWordToImageGame
-            questions={matchWordQuestions}
-            gameName={game.name}
-          />
+          {!configDone ? (
+            <GameConfigScreen
+              gameName={game.name}
+              totalQuestions={matchWordQuestions.length}
+              onStart={handleConfigStart}
+            />
+          ) : (
+            <MatchWordToImageGame
+              questions={activeQuestions}
+              gameName={game.name}
+              onGameComplete={handleGameComplete}
+              showSavePrompt={!identity}
+              onSignIn={login}
+              scoreSaved={scoreSaved}
+              onPlayAgain={handlePlayAgain}
+            />
+          )}
         </div>
         <FullscreenButton />
       </div>
     );
   }
 
-  // Render Choose Correct Image game
+  // Choose Correct Image
   if (
     isChooseCorrectImageGame &&
     chooseImageQuestions &&
     chooseImageQuestions.length > 0
   ) {
+    const activeQuestions = questionLimit
+      ? chooseImageQuestions.slice(0, questionLimit)
+      : chooseImageQuestions;
+
     return (
       <div
         ref={gameContainerRef}
-        className={`flex items-start gap-4 px-4 py-8 min-h-screen ${isFullscreen ? "bg-background" : ""}`}
+        className={`flex items-start gap-4 px-4 py-8 min-h-screen ${
+          isFullscreen ? "bg-background" : ""
+        }`}
       >
         <BackButton />
         <div className="flex-1 min-w-0">
-          <ChooseCorrectImageGame
-            questions={chooseImageQuestions}
-            gameName={game.name}
-          />
+          {!configDone ? (
+            <GameConfigScreen
+              gameName={game.name}
+              totalQuestions={chooseImageQuestions.length}
+              onStart={handleConfigStart}
+            />
+          ) : (
+            <ChooseCorrectImageGame
+              questions={activeQuestions}
+              gameName={game.name}
+              onGameComplete={handleGameComplete}
+              showSavePrompt={!identity}
+              onSignIn={login}
+              scoreSaved={scoreSaved}
+              onPlayAgain={handlePlayAgain}
+            />
+          )}
         </div>
         <FullscreenButton />
       </div>
     );
   }
 
-  // Show empty state if no questions for known games
   if (
     (isMatchWordToImageGame &&
       (!matchWordQuestions || matchWordQuestions.length === 0)) ||
@@ -211,11 +275,9 @@ export default function GameLaunchPage() {
     );
   }
 
-  // For other games, show coming soon message
   return (
     <div className="flex items-start gap-4 px-4 py-8 min-h-screen">
       <BackButton />
-
       <div className="flex-1 min-w-0 max-w-4xl">
         <div className="bg-card rounded-lg border border-border overflow-hidden shadow-lg">
           <div className="p-8">

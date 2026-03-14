@@ -29,11 +29,7 @@ export default function ProtectedRoute() {
         <Card className="w-full max-w-md text-center shadow-lg">
           <CardHeader className="pb-4">
             <div className="flex justify-center mb-4">
-              <img
-                src={ASSETS.logo}
-                alt="Rehab Game Hub"
-                className="h-16 w-16"
-              />
+              <img src={ASSETS.logo} alt="BrainBloom" className="h-16 w-16" />
             </div>
             <div className="flex items-center justify-center gap-2 mb-2">
               <Shield className="h-5 w-5 text-primary" />

@@ -45,6 +45,14 @@ export const MatchWordToImageQuestion = IDL.Record({
   'image' : ExternalBlob,
   'options' : IDL.Vec(Option),
 });
+export const PlayerSession = IDL.Record({
+  'gameId' : IDL.Text,
+  'correct' : IDL.Nat,
+  'durationSeconds' : IDL.Nat,
+  'timestamp' : IDL.Int,
+  'gameName' : IDL.Text,
+  'wrong' : IDL.Nat,
+});
 
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -110,10 +118,16 @@ export const idlService = IDL.Service({
     ),
   'getGameById' : IDL.Func([GameId], [Game], ['query']),
   'getGamesByTag' : IDL.Func([IDL.Text], [IDL.Vec(Game)], ['query']),
+  'getMyGameSessions' : IDL.Func([], [IDL.Vec(PlayerSession)], ['query']),
   'getQuestion' : IDL.Func(
       [GameId, QuestionId],
       [IDL.Opt(MatchWordToImageQuestion)],
       ['query'],
+    ),
+  'saveGameSession' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Nat, IDL.Nat, IDL.Nat],
+      [],
+      [],
     ),
   'updateChooseCorrectImageQuestion' : IDL.Func(
       [GameId, IDL.Text, IDL.Text, IDL.Vec(ExternalBlob), IDL.Nat],
@@ -181,6 +195,14 @@ export const idlFactory = ({ IDL }) => {
     'image' : ExternalBlob,
     'options' : IDL.Vec(Option),
   });
+  const PlayerSession = IDL.Record({
+    'gameId' : IDL.Text,
+    'correct' : IDL.Nat,
+    'durationSeconds' : IDL.Nat,
+    'timestamp' : IDL.Int,
+    'gameName' : IDL.Text,
+    'wrong' : IDL.Nat,
+  });
   
   return IDL.Service({
     '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -246,10 +268,16 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getGameById' : IDL.Func([GameId], [Game], ['query']),
     'getGamesByTag' : IDL.Func([IDL.Text], [IDL.Vec(Game)], ['query']),
+    'getMyGameSessions' : IDL.Func([], [IDL.Vec(PlayerSession)], ['query']),
     'getQuestion' : IDL.Func(
         [GameId, QuestionId],
         [IDL.Opt(MatchWordToImageQuestion)],
         ['query'],
+      ),
+    'saveGameSession' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Nat, IDL.Nat, IDL.Nat],
+        [],
+        [],
       ),
     'updateChooseCorrectImageQuestion' : IDL.Func(
         [GameId, IDL.Text, IDL.Text, IDL.Vec(ExternalBlob), IDL.Nat],

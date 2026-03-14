@@ -2,12 +2,28 @@ import type { ChooseCorrectImageQuestion } from "@/backend";
 import { Card } from "@/components/ui/card";
 import { useGameSounds } from "@/hooks/useGameSounds";
 import { shuffleArray } from "@/lib/shuffle";
-import { CheckCircle2, Loader2, Trophy, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Loader2,
+  LogIn,
+  Save,
+  Trophy,
+  XCircle,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface ChooseCorrectImageGameProps {
   questions: ChooseCorrectImageQuestion[];
   gameName: string;
+  onGameComplete?: (
+    correct: number,
+    wrong: number,
+    durationSeconds: number,
+  ) => void;
+  showSavePrompt?: boolean;
+  onSignIn?: () => void;
+  scoreSaved?: boolean;
+  onPlayAgain?: () => void;
 }
 
 interface ShuffledQuestion {
@@ -22,6 +38,11 @@ type ImageState = "idle" | "correct" | "incorrect";
 export default function ChooseCorrectImageGame({
   questions,
   gameName,
+  onGameComplete,
+  showSavePrompt,
+  onSignIn,
+  scoreSaved,
+  onPlayAgain,
 }: ChooseCorrectImageGameProps) {
   const [shuffledQuestions, setShuffledQuestions] = useState<
     ShuffledQuestion[]
@@ -35,31 +56,23 @@ export default function ChooseCorrectImageGame({
   const [score, setScore] = useState(0);
   const [wrongAttempts, setWrongAttempts] = useState(0);
   const autoAdvanceTimeoutRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number>(Date.now());
   const { playCorrect, playWrong } = useGameSounds();
 
   // Initialize and shuffle questions on mount
   useEffect(() => {
     const initializeGame = async () => {
       setLoading(true);
+      startTimeRef.current = Date.now();
 
-      // Shuffle question order
       const shuffled = shuffleArray(questions);
 
-      // Process each question: get direct URLs for images and shuffle them
       const processedQuestions = shuffled.map((question) => {
         const imageUrls = question.images.map((img) => img.getDirectURL());
-
-        // Convert bigint to number for correct index
         const correctIdx = Number(question.correctImageIndex);
-
-        // Create array of indices and shuffle them
         const indices = Array.from({ length: imageUrls.length }, (_, i) => i);
         const shuffledIndices = shuffleArray(indices);
-
-        // Reorder images according to shuffled indices
         const shuffledImageUrls = shuffledIndices.map((i) => imageUrls[i]);
-
-        // Find new position of correct image
         const newCorrectIndex = shuffledIndices.indexOf(correctIdx);
 
         return {
@@ -95,7 +108,6 @@ export default function ChooseCorrectImageGame({
     window.speechSynthesis.speak(utterance);
   }, []);
 
-  // Initialize image states and speak the word when question changes
   useEffect(() => {
     if (
       shuffledQuestions.length > 0 &&
@@ -110,13 +122,17 @@ export default function ChooseCorrectImageGame({
 
   const currentQuestion = shuffledQuestions[currentQuestionIndex];
 
-  const advanceToNext = () => {
+  const advanceToNext = (currentScore: number, currentWrong: number) => {
     if (currentQuestionIndex < shuffledQuestions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
       setSelectedImage(null);
       setCanProceed(false);
     } else {
       setGameComplete(true);
+      const durationSeconds = Math.floor(
+        (Date.now() - startTimeRef.current) / 1000,
+      );
+      onGameComplete?.(currentScore, currentWrong, durationSeconds);
     }
   };
 
@@ -131,18 +147,18 @@ export default function ChooseCorrectImageGame({
     if (index === currentQuestion.correctIndex) {
       newStates[index] = "correct";
       setCanProceed(true);
-      setScore((prev) => prev + 1);
+      const newScore = score + 1;
+      setScore(newScore);
       playCorrect();
-      // Auto-advance after 3 seconds
       autoAdvanceTimeoutRef.current = window.setTimeout(() => {
-        advanceToNext();
+        advanceToNext(newScore, wrongAttempts);
         autoAdvanceTimeoutRef.current = null;
       }, 3000);
     } else {
       newStates[index] = "incorrect";
-      setWrongAttempts((prev) => prev + 1);
+      const newWrong = wrongAttempts + 1;
+      setWrongAttempts(newWrong);
       playWrong();
-      // Allow unlimited retries - reset after a short delay
       setTimeout(() => {
         setSelectedImage(null);
         setImageStates(Array(currentQuestion.imageUrls.length).fill("idle"));
@@ -153,7 +169,10 @@ export default function ChooseCorrectImageGame({
   };
 
   const handleRestart = () => {
-    // Reshuffle questions from the original list
+    if (onPlayAgain) {
+      onPlayAgain();
+      return;
+    }
     const shuffled = shuffleArray(questions);
     const processedQuestions = shuffled.map((question) => {
       const imageUrls = question.images.map((img) => img.getDirectURL());
@@ -178,6 +197,7 @@ export default function ChooseCorrectImageGame({
     setGameComplete(false);
     setScore(0);
     setWrongAttempts(0);
+    startTimeRef.current = Date.now();
   };
 
   if (loading) {
@@ -205,7 +225,10 @@ export default function ChooseCorrectImageGame({
 
   if (gameComplete) {
     return (
-      <div className="max-w-2xl mx-auto" data-ocid="choose-image.results.panel">
+      <div
+        className="max-w-2xl mx-auto space-y-4"
+        data-ocid="choose-image.results.panel"
+      >
         <Card className="p-12 text-center">
           <Trophy className="h-20 w-20 text-yellow-500 mx-auto mb-6" />
           <h2 className="text-3xl font-bold text-foreground mb-2">
@@ -213,7 +236,6 @@ export default function ChooseCorrectImageGame({
           </h2>
           <p className="text-lg text-muted-foreground mb-6">{gameName}</p>
 
-          {/* Final ratio */}
           <div className="mb-8">
             <p className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">
               Session Results
@@ -248,6 +270,16 @@ export default function ChooseCorrectImageGame({
             </p>
           </div>
 
+          {scoreSaved && (
+            <div
+              className="flex items-center justify-center gap-2 mb-4 text-sm text-green-600 bg-green-50 dark:bg-green-950/30 rounded-lg px-4 py-2"
+              data-ocid="choose-image.results.success_state"
+            >
+              <Save className="h-4 w-4" />
+              Score saved to your profile!
+            </div>
+          )}
+
           <button
             type="button"
             onClick={handleRestart}
@@ -257,6 +289,30 @@ export default function ChooseCorrectImageGame({
             Play Again
           </button>
         </Card>
+
+        {showSavePrompt && !scoreSaved && (
+          <Card className="p-6" data-ocid="choose-image.signin.card">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-medium text-foreground text-sm">
+                  Want to track your progress?
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Sign in to save your score and see improvements over time.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onSignIn}
+                data-ocid="choose-image.signin.button"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shrink-0"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign In
+              </button>
+            </div>
+          </Card>
+        )}
       </div>
     );
   }
@@ -264,7 +320,6 @@ export default function ChooseCorrectImageGame({
   return (
     <div className="max-w-4xl mx-auto">
       <Card className="p-8">
-        {/* Progress */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium text-muted-foreground">
@@ -287,7 +342,6 @@ export default function ChooseCorrectImageGame({
           </div>
         </div>
 
-        {/* Question */}
         <div className="mb-8 text-center">
           <h2 className="text-4xl font-bold text-foreground mb-2">
             {currentQuestion.word}
@@ -295,7 +349,6 @@ export default function ChooseCorrectImageGame({
           <p className="text-muted-foreground">Choose the correct image</p>
         </div>
 
-        {/* Image Options */}
         <div
           className={`grid gap-4 mb-8 ${
             currentQuestion.imageUrls.length <= 2

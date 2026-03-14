@@ -9,6 +9,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import GameLaunchPage from "./pages/GameLaunchPage";
 import GameManagerPage from "./pages/GameManagerPage";
 import HomePage from "./pages/HomePage";
+import ProfilePage from "./pages/ProfilePage";
 
 const rootRoute = createRootRoute({
   component: AppLayout,
@@ -38,10 +39,17 @@ const gameLaunchRoute = createRoute({
   component: GameLaunchPage,
 });
 
+const profileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/profile",
+  component: ProfilePage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   managerLayoutRoute.addChildren([managerIndexRoute]),
   gameLaunchRoute,
+  profileRoute,
 ]);
 
 const router = createRouter({ routeTree });

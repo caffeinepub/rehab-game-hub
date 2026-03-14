@@ -5,11 +5,11 @@ import Text "mo:core/Text";
 import Iter "mo:core/Iter";
 import Nat "mo:core/Nat";
 import Runtime "mo:core/Runtime";
+import Principal "mo:core/Principal";
+import Time "mo:core/Time";
 
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
-
-
 
 actor {
   include MixinStorage();
@@ -47,9 +47,19 @@ actor {
     correctImageIndex : Nat;
   };
 
+  public type PlayerSession = {
+    gameId : Text;
+    gameName : Text;
+    correct : Nat;
+    wrong : Nat;
+    durationSeconds : Nat;
+    timestamp : Int;
+  };
+
   var persistentGames = Map.empty<GameId, Game>();
   var persistentQuestions = Map.empty<GameId, List.List<MatchWordToImageQuestion>>();
   var persistentChooseCorrectImageQuestions = Map.empty<GameId, List.List<ChooseCorrectImageQuestion>>();
+  var persistentPlayerSessions = Map.empty<Principal, List.List<PlayerSession>>();
   var _nextQuestionId = 0;
 
   public shared ({ caller }) func createGame(
@@ -327,6 +337,40 @@ actor {
     switch (persistentChooseCorrectImageQuestions.get(gameId)) {
       case (null) { [] };
       case (?questions) { questions.toArray() };
+    };
+  };
+
+  public shared ({ caller }) func saveGameSession(gameId : Text, gameName : Text, correct : Nat, wrong : Nat, durationSeconds : Nat) : async () {
+    if (caller.isAnonymous()) {
+      Runtime.trap("Anonymous users cannot save game sessions.");
+    };
+
+    let session : PlayerSession = {
+      gameId;
+      gameName;
+      correct;
+      wrong;
+      durationSeconds;
+      timestamp = Time.now();
+    };
+
+    switch (persistentPlayerSessions.get(caller)) {
+      case (null) {
+        let newList = List.empty<PlayerSession>();
+        newList.add(session);
+        persistentPlayerSessions.add(caller, newList);
+      };
+      case (?existingSessions) {
+        existingSessions.add(session);
+      };
+    };
+  };
+
+  public query ({ caller }) func getMyGameSessions() : async [PlayerSession] {
+    if (caller.isAnonymous()) { return [] };
+    switch (persistentPlayerSessions.get(caller)) {
+      case (null) { [] };
+      case (?sessions) { sessions.toArray() };
     };
   };
 };

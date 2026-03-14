@@ -99,18 +99,20 @@ export interface Game {
     description: string;
     secondaryColor: string;
 }
-export type GameId = string;
+export interface PlayerSession {
+    gameId: string;
+    correct: bigint;
+    durationSeconds: bigint;
+    timestamp: bigint;
+    gameName: string;
+    wrong: bigint;
+}
 export interface _CaffeineStorageRefillInformation {
     proposed_top_up_amount?: bigint;
 }
 export type Option = string;
 export type QuestionId = string;
-export interface ChooseCorrectImageQuestion {
-    id: string;
-    correctImageIndex: bigint;
-    word: string;
-    images: Array<ExternalBlob>;
-}
+export type GameId = string;
 export interface _CaffeineStorageCreateCertificateResult {
     method: string;
     blob_hash: string;
@@ -120,6 +122,12 @@ export interface MatchWordToImageQuestion {
     correctOption: Option;
     image: ExternalBlob;
     options: Array<Option>;
+}
+export interface ChooseCorrectImageQuestion {
+    id: string;
+    correctImageIndex: bigint;
+    word: string;
+    images: Array<ExternalBlob>;
 }
 export interface _CaffeineStorageRefillResult {
     success?: boolean;
@@ -140,7 +148,9 @@ export interface backendInterface {
     getAllQuestions(gameId: GameId): Promise<Array<MatchWordToImageQuestion>>;
     getGameById(id: GameId): Promise<Game>;
     getGamesByTag(tag: string): Promise<Array<Game>>;
+    getMyGameSessions(): Promise<Array<PlayerSession>>;
     getQuestion(gameId: GameId, questionId: QuestionId): Promise<MatchWordToImageQuestion | null>;
+    saveGameSession(gameId: string, gameName: string, correct: bigint, wrong: bigint, durationSeconds: bigint): Promise<void>;
     updateChooseCorrectImageQuestion(gameId: GameId, questionId: string, word: string, images: Array<ExternalBlob>, correctImageIndex: bigint): Promise<void>;
     updateGame(id: GameId, name: string, description: string, icon: string, badges: Array<string>, primaryColor: string, secondaryColor: string, tags: Array<string>): Promise<void>;
     updateQuestion(gameId: GameId, questionId: QuestionId, image: ExternalBlob, options: Array<Option>, correctOption: Option): Promise<void>;
@@ -344,6 +354,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getMyGameSessions(): Promise<Array<PlayerSession>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getMyGameSessions();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getMyGameSessions();
+            return result;
+        }
+    }
     async getQuestion(arg0: GameId, arg1: QuestionId): Promise<MatchWordToImageQuestion | null> {
         if (this.processError) {
             try {
@@ -356,6 +380,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getQuestion(arg0, arg1);
             return from_candid_opt_n18(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async saveGameSession(arg0: string, arg1: string, arg2: bigint, arg3: bigint, arg4: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveGameSession(arg0, arg1, arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveGameSession(arg0, arg1, arg2, arg3, arg4);
+            return result;
         }
     }
     async updateChooseCorrectImageQuestion(arg0: GameId, arg1: string, arg2: string, arg3: Array<ExternalBlob>, arg4: bigint): Promise<void> {

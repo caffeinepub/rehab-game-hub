@@ -35,6 +35,14 @@ export interface MatchWordToImageQuestion {
   'options' : Array<Option>,
 }
 export type Option = string;
+export interface PlayerSession {
+  'gameId' : string,
+  'correct' : bigint,
+  'durationSeconds' : bigint,
+  'timestamp' : bigint,
+  'gameName' : string,
+  'wrong' : bigint,
+}
 export type QuestionId = string;
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
@@ -92,9 +100,14 @@ export interface _SERVICE {
   'getAllQuestions' : ActorMethod<[GameId], Array<MatchWordToImageQuestion>>,
   'getGameById' : ActorMethod<[GameId], Game>,
   'getGamesByTag' : ActorMethod<[string], Array<Game>>,
+  'getMyGameSessions' : ActorMethod<[], Array<PlayerSession>>,
   'getQuestion' : ActorMethod<
     [GameId, QuestionId],
     [] | [MatchWordToImageQuestion]
+  >,
+  'saveGameSession' : ActorMethod<
+    [string, string, bigint, bigint, bigint],
+    undefined
   >,
   'updateChooseCorrectImageQuestion' : ActorMethod<
     [GameId, string, string, Array<ExternalBlob>, bigint],

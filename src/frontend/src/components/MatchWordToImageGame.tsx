@@ -3,12 +3,28 @@ import { Card } from "@/components/ui/card";
 import { useGameSounds } from "@/hooks/useGameSounds";
 import { blobToObjectURL } from "@/lib/externalBlob";
 import { shuffleArray, shuffleOptions } from "@/lib/shuffle";
-import { CheckCircle2, Loader2, Trophy, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Loader2,
+  LogIn,
+  Save,
+  Trophy,
+  XCircle,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 interface MatchWordToImageGameProps {
   questions: MatchWordToImageQuestion[];
   gameName: string;
+  onGameComplete?: (
+    correct: number,
+    wrong: number,
+    durationSeconds: number,
+  ) => void;
+  showSavePrompt?: boolean;
+  onSignIn?: () => void;
+  scoreSaved?: boolean;
+  onPlayAgain?: () => void;
 }
 
 interface ShuffledQuestion {
@@ -23,6 +39,11 @@ type OptionState = "idle" | "correct" | "incorrect";
 export default function MatchWordToImageGame({
   questions,
   gameName,
+  onGameComplete,
+  showSavePrompt,
+  onSignIn,
+  scoreSaved,
+  onPlayAgain,
 }: MatchWordToImageGameProps) {
   const [shuffledQuestions, setShuffledQuestions] = useState<
     ShuffledQuestion[]
@@ -38,17 +59,17 @@ export default function MatchWordToImageGame({
   const resetTimeoutRef = useRef<number | null>(null);
   const autoAdvanceTimeoutRef = useRef<number | null>(null);
   const shuffledQuestionsRef = useRef<ShuffledQuestion[]>([]);
+  const startTimeRef = useRef<number>(Date.now());
   const { playWrong } = useGameSounds();
 
   // Initialize and shuffle questions on mount
   useEffect(() => {
     const initializeGame = async () => {
       setLoading(true);
+      startTimeRef.current = Date.now();
 
-      // Shuffle question order
       const shuffled = shuffleArray(questions);
 
-      // Load images and shuffle options for each question
       const processedQuestions = await Promise.all(
         shuffled.map(async (question) => {
           const imageUrl = await blobToObjectURL(question.image);
@@ -73,7 +94,6 @@ export default function MatchWordToImageGame({
 
     initializeGame();
 
-    // Cleanup URLs on unmount
     return () => {
       for (const q of shuffledQuestionsRef.current) {
         if (q.imageUrl) {
@@ -107,7 +127,7 @@ export default function MatchWordToImageGame({
     window.speechSynthesis.speak(utterance);
   };
 
-  const advanceToNext = () => {
+  const advanceToNext = (currentScore: number, currentWrong: number) => {
     if (currentQuestionIndex < shuffledQuestions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
       setSelectedOption(null);
@@ -115,6 +135,10 @@ export default function MatchWordToImageGame({
       setCanProceed(false);
     } else {
       setGameComplete(true);
+      const durationSeconds = Math.floor(
+        (Date.now() - startTimeRef.current) / 1000,
+      );
+      onGameComplete?.(currentScore, currentWrong, durationSeconds);
     }
   };
 
@@ -129,18 +153,18 @@ export default function MatchWordToImageGame({
     if (index === currentQuestion.correctIndex) {
       newStates[index] = "correct";
       setCanProceed(true);
-      setScore((prev) => prev + 1);
+      const newScore = score + 1;
+      setScore(newScore);
       speakWord(currentQuestion.options[index]);
-      // Auto-advance after 3 seconds
       autoAdvanceTimeoutRef.current = window.setTimeout(() => {
-        advanceToNext();
+        advanceToNext(newScore, wrongAttempts);
         autoAdvanceTimeoutRef.current = null;
       }, 3000);
     } else {
       newStates[index] = "incorrect";
-      setWrongAttempts((prev) => prev + 1);
+      const newWrong = wrongAttempts + 1;
+      setWrongAttempts(newWrong);
       playWrong();
-      // Allow unlimited retries - reset after a short delay
       resetTimeoutRef.current = window.setTimeout(() => {
         setSelectedOption(null);
         setOptionStates(Array(currentQuestion.options.length).fill("idle"));
@@ -152,6 +176,10 @@ export default function MatchWordToImageGame({
   };
 
   const handleRestart = () => {
+    if (onPlayAgain) {
+      onPlayAgain();
+      return;
+    }
     setCurrentQuestionIndex(0);
     setSelectedOption(null);
     setOptionStates([]);
@@ -159,8 +187,8 @@ export default function MatchWordToImageGame({
     setGameComplete(false);
     setScore(0);
     setWrongAttempts(0);
+    startTimeRef.current = Date.now();
 
-    // Re-shuffle questions
     const reshuffled = shuffleArray(shuffledQuestions);
     setShuffledQuestions(reshuffled);
   };
@@ -178,7 +206,10 @@ export default function MatchWordToImageGame({
 
   if (gameComplete) {
     return (
-      <div className="max-w-2xl mx-auto" data-ocid="match-word.results.panel">
+      <div
+        className="max-w-2xl mx-auto space-y-4"
+        data-ocid="match-word.results.panel"
+      >
         <Card className="p-12 text-center">
           <Trophy className="h-20 w-20 text-yellow-500 mx-auto mb-6" />
           <h2 className="text-3xl font-bold text-foreground mb-2">
@@ -186,7 +217,6 @@ export default function MatchWordToImageGame({
           </h2>
           <p className="text-lg text-muted-foreground mb-6">{gameName}</p>
 
-          {/* Final ratio */}
           <div className="mb-8">
             <p className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">
               Session Results
@@ -221,6 +251,16 @@ export default function MatchWordToImageGame({
             </p>
           </div>
 
+          {scoreSaved && (
+            <div
+              className="flex items-center justify-center gap-2 mb-4 text-sm text-green-600 bg-green-50 dark:bg-green-950/30 rounded-lg px-4 py-2"
+              data-ocid="match-word.results.success_state"
+            >
+              <Save className="h-4 w-4" />
+              Score saved to your profile!
+            </div>
+          )}
+
           <button
             type="button"
             onClick={handleRestart}
@@ -230,6 +270,30 @@ export default function MatchWordToImageGame({
             Play Again
           </button>
         </Card>
+
+        {showSavePrompt && !scoreSaved && (
+          <Card className="p-6" data-ocid="match-word.signin.card">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-medium text-foreground text-sm">
+                  Want to track your progress?
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Sign in to save your score and see improvements over time.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onSignIn}
+                data-ocid="match-word.signin.button"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shrink-0"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign In
+              </button>
+            </div>
+          </Card>
+        )}
       </div>
     );
   }
@@ -244,7 +308,6 @@ export default function MatchWordToImageGame({
       </div>
 
       <Card className="overflow-hidden">
-        {/* Image Display */}
         <div className="aspect-video w-full bg-muted relative overflow-hidden">
           <img
             src={currentQuestion.imageUrl}
@@ -253,7 +316,6 @@ export default function MatchWordToImageGame({
           />
         </div>
 
-        {/* Options */}
         <div className="p-8">
           <h3 className="text-lg font-semibold text-foreground mb-6 text-center">
             Select the correct word for this image:
