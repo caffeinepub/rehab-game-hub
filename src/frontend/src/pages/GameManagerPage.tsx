@@ -113,22 +113,22 @@ export default function GameManagerPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="match-word" data-ocid="manager.match_word.tab">
-            Match Word to Image
+            Choose The Word
           </TabsTrigger>
           <TabsTrigger
             value="choose-image"
             data-ocid="manager.choose_image.tab"
           >
-            Choose Correct Image
+            Choose The Image
           </TabsTrigger>
         </TabsList>
 
-        {/* Match Word to Image Tab */}
+        {/* Choose The Word Tab */}
         <TabsContent value="match-word">
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h3 className="text-xl font-semibold text-foreground mb-1">
-                Match Word to Image Questions
+                Choose The Word Questions
               </h3>
               <p className="text-sm text-muted-foreground">
                 {matchWordQuestions?.length || 0} question
@@ -160,7 +160,7 @@ export default function GameManagerPage() {
                 </h3>
                 <p className="text-muted-foreground mb-6">
                   Get started by creating your first question. Each question
-                  includes an image and three word options.
+                  includes an image and word options.
                 </p>
                 <Button
                   onClick={() => {
@@ -184,12 +184,12 @@ export default function GameManagerPage() {
           )}
         </TabsContent>
 
-        {/* Choose Correct Image Tab */}
+        {/* Choose The Image Tab */}
         <TabsContent value="choose-image">
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h3 className="text-xl font-semibold text-foreground mb-1">
-                Choose Correct Image Questions
+                Choose The Image Questions
               </h3>
               <p className="text-sm text-muted-foreground">
                 {chooseImageQuestions?.length || 0} question

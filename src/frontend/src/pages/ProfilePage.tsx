@@ -56,13 +56,13 @@ function formatDateShort(timestampNs: bigint): string {
   });
 }
 
-const GAME_NAMES = ["Match Word to Image", "Choose Correct Image"];
+const GAME_NAMES = ["Choose The Word", "Choose The Image"];
 const GAME_COLORS = {
-  "Match Word to Image": {
+  "Choose The Word": {
     stroke: "hsl(var(--primary))",
     fill: "hsl(var(--primary))",
   },
-  "Choose Correct Image": {
+  "Choose The Image": {
     stroke: "hsl(142 71% 45%)",
     fill: "hsl(142 71% 45%)",
   },

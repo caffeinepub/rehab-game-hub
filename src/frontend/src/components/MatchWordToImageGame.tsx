@@ -337,7 +337,7 @@ export default function MatchWordToImageGame({
                   onClick={() => handleOptionClick(index)}
                   disabled={canProceed || selectedOption !== null}
                   data-ocid={`match-word.option.${index + 1}`}
-                  className={`relative text-5xl h-auto py-6 px-8 rounded-md border-2 transition-all font-medium ${
+                  className={`relative text-3xl h-auto py-6 px-8 rounded-md border-2 transition-all font-medium ${
                     state === "correct"
                       ? "border-green-600 bg-green-600 text-white ring-4 ring-green-600/20"
                       : state === "incorrect"

@@ -7,10 +7,10 @@ export const CHOOSE_CORRECT_IMAGE_GAME_ID = "choose-correct-image";
 // Game metadata
 export const MATCH_WORD_TO_IMAGE_GAME = {
   id: MATCH_WORD_TO_IMAGE_GAME_ID,
-  name: "Match Word to Image",
+  name: "Choose The Word",
   description:
     "Match the correct word to the displayed image. A fun and engaging way to improve word recognition and cognitive skills.",
-  icon: "/assets/generated/game-thumbnail-placeholder.dim_800x600.png",
+  icon: "/assets/uploads/choose-the-word-1.png",
   badges: [],
   primaryColor: "#6B7280",
   secondaryColor: "#9CA3AF",
@@ -19,10 +19,10 @@ export const MATCH_WORD_TO_IMAGE_GAME = {
 
 export const CHOOSE_CORRECT_IMAGE_GAME = {
   id: CHOOSE_CORRECT_IMAGE_GAME_ID,
-  name: "Choose Correct Image",
+  name: "Choose The Image",
   description:
     "See a word and choose the matching image from multiple options. Improve visual recognition and word association skills.",
-  icon: "/assets/generated/reverse-match-word-to-image-thumbnail.dim_800x600.png",
+  icon: "/assets/uploads/choose-the-image-1.png",
   badges: [],
   primaryColor: "#6B7280",
   secondaryColor: "#9CA3AF",
