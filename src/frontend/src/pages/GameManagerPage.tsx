@@ -1,19 +1,28 @@
 import type {
   ChooseCorrectImageQuestion,
+  FindTheItemQuestion,
   MatchWordToImageQuestion,
 } from "@/backend";
 import ChooseCorrectImageQuestionEditorDialog from "@/components/ChooseCorrectImageQuestionEditorDialog";
 import ChooseCorrectImageQuestionList from "@/components/ChooseCorrectImageQuestionList";
+import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import FindTheItemQuestionEditorDialog from "@/components/FindTheItemQuestionEditorDialog";
+import FindTheItemQuestionList from "@/components/FindTheItemQuestionList";
 import MatchWordToImageQuestionEditorDialog from "@/components/MatchWordToImageQuestionEditorDialog";
 import MatchWordToImageQuestionList from "@/components/MatchWordToImageQuestionList";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  useDeleteChooseCorrectImageQuestion,
+  useDeleteFindTheItemQuestion,
+  useDeleteQuestion,
   useGetAllChooseCorrectImageQuestions,
+  useGetAllFindTheItemQuestions,
   useGetAllQuestions,
 } from "@/hooks/useQueries";
 import {
   CHOOSE_CORRECT_IMAGE_GAME_ID,
+  FIND_THE_ITEM_GAME_ID,
   MATCH_WORD_TO_IMAGE_GAME_ID,
 } from "@/lib/gameConstants";
 import { AlertCircle, Loader2, Plus } from "lucide-react";
@@ -30,9 +39,19 @@ export default function GameManagerPage() {
     isLoading: chooseImageLoading,
     error: chooseImageError,
   } = useGetAllChooseCorrectImageQuestions(CHOOSE_CORRECT_IMAGE_GAME_ID);
+  const {
+    data: findItemQuestions,
+    isLoading: findItemLoading,
+    error: findItemError,
+  } = useGetAllFindTheItemQuestions(FIND_THE_ITEM_GAME_ID);
+
+  const deleteMatchWord = useDeleteQuestion();
+  const deleteChooseImage = useDeleteChooseCorrectImageQuestion();
+  const deleteFindItem = useDeleteFindTheItemQuestion();
 
   const [matchWordEditorOpen, setMatchWordEditorOpen] = useState(false);
   const [chooseImageEditorOpen, setChooseImageEditorOpen] = useState(false);
+  const [findItemEditorOpen, setFindItemEditorOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("match-word");
 
   // Edit state
@@ -40,6 +59,14 @@ export default function GameManagerPage() {
     useState<MatchWordToImageQuestion | null>(null);
   const [editingChooseImageQuestion, setEditingChooseImageQuestion] =
     useState<ChooseCorrectImageQuestion | null>(null);
+  const [editingFindItemQuestion, setEditingFindItemQuestion] =
+    useState<FindTheItemQuestion | null>(null);
+
+  // Delete confirmation state
+  const [deletingQuestionId, setDeletingQuestionId] = useState<{
+    type: "matchWord" | "chooseImage" | "findItem";
+    id: string;
+  } | null>(null);
 
   const handleEditMatchWord = (question: MatchWordToImageQuestion) => {
     setEditingMatchWordQuestion(question);
@@ -51,22 +78,57 @@ export default function GameManagerPage() {
     setChooseImageEditorOpen(true);
   };
 
+  const handleEditFindItem = (question: FindTheItemQuestion) => {
+    setEditingFindItemQuestion(question);
+    setFindItemEditorOpen(true);
+  };
+
   const handleMatchWordOpenChange = (open: boolean) => {
     setMatchWordEditorOpen(open);
-    if (!open) {
-      setEditingMatchWordQuestion(null);
-    }
+    if (!open) setEditingMatchWordQuestion(null);
   };
 
   const handleChooseImageOpenChange = (open: boolean) => {
     setChooseImageEditorOpen(open);
-    if (!open) {
-      setEditingChooseImageQuestion(null);
-    }
+    if (!open) setEditingChooseImageQuestion(null);
   };
 
-  const isLoading = matchWordLoading || chooseImageLoading;
-  const error = matchWordError || chooseImageError;
+  const handleFindItemOpenChange = (open: boolean) => {
+    setFindItemEditorOpen(open);
+    if (!open) setEditingFindItemQuestion(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingQuestionId) return;
+    const { type, id } = deletingQuestionId;
+
+    if (type === "matchWord") {
+      await deleteMatchWord.mutateAsync({
+        gameId: MATCH_WORD_TO_IMAGE_GAME_ID,
+        questionId: id,
+      });
+    } else if (type === "chooseImage") {
+      await deleteChooseImage.mutateAsync({
+        gameId: CHOOSE_CORRECT_IMAGE_GAME_ID,
+        questionId: id,
+      });
+    } else if (type === "findItem") {
+      await deleteFindItem.mutateAsync({
+        gameId: FIND_THE_ITEM_GAME_ID,
+        questionId: id,
+      });
+    }
+
+    setDeletingQuestionId(null);
+  };
+
+  const isDeleting =
+    deleteMatchWord.isPending ||
+    deleteChooseImage.isPending ||
+    deleteFindItem.isPending;
+
+  const isLoading = matchWordLoading || chooseImageLoading || findItemLoading;
+  const error = matchWordError || chooseImageError || findItemError;
 
   if (isLoading) {
     return (
@@ -120,6 +182,9 @@ export default function GameManagerPage() {
             data-ocid="manager.choose_image.tab"
           >
             Choose The Image
+          </TabsTrigger>
+          <TabsTrigger value="find-item" data-ocid="manager.find_item.tab">
+            Find The Item
           </TabsTrigger>
         </TabsList>
 
@@ -180,6 +245,9 @@ export default function GameManagerPage() {
             <MatchWordToImageQuestionList
               questions={matchWordQuestions}
               onEdit={handleEditMatchWord}
+              onDelete={(id) =>
+                setDeletingQuestionId({ type: "matchWord", id })
+              }
             />
           )}
         </TabsContent>
@@ -241,6 +309,71 @@ export default function GameManagerPage() {
             <ChooseCorrectImageQuestionList
               questions={chooseImageQuestions}
               onEdit={handleEditChooseImage}
+              onDelete={(id) =>
+                setDeletingQuestionId({ type: "chooseImage", id })
+              }
+            />
+          )}
+        </TabsContent>
+
+        {/* Find The Item Tab */}
+        <TabsContent value="find-item">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-1">
+                Find The Item Questions
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {findItemQuestions?.length || 0} question
+                {findItemQuestions?.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                setEditingFindItemQuestion(null);
+                setFindItemEditorOpen(true);
+              }}
+              size="lg"
+              className="gap-2"
+              data-ocid="manager.find_item.open_modal_button"
+            >
+              <Plus className="h-5 w-5" />
+              Add Question
+            </Button>
+          </div>
+
+          {!findItemQuestions || findItemQuestions.length === 0 ? (
+            <div
+              className="flex flex-col items-center justify-center min-h-[400px] gap-4 bg-muted/30 rounded-lg border-2 border-dashed border-border p-12"
+              data-ocid="manager.find_item.empty_state"
+            >
+              <div className="text-center max-w-md">
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                  No questions created yet
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  Get started by creating your first question. Each question
+                  includes a scene background and placed item images.
+                </p>
+                <Button
+                  onClick={() => {
+                    setEditingFindItemQuestion(null);
+                    setFindItemEditorOpen(true);
+                  }}
+                  size="lg"
+                  className="gap-2"
+                  data-ocid="manager.find_item.primary_button"
+                >
+                  <Plus className="h-5 w-5" />
+                  Create First Question
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <FindTheItemQuestionList
+              questions={findItemQuestions}
+              onEdit={handleEditFindItem}
+              onDelete={(id) => setDeletingQuestionId({ type: "findItem", id })}
             />
           )}
         </TabsContent>
@@ -258,6 +391,23 @@ export default function GameManagerPage() {
         onOpenChange={handleChooseImageOpenChange}
         gameId={CHOOSE_CORRECT_IMAGE_GAME_ID}
         initialQuestion={editingChooseImageQuestion ?? undefined}
+      />
+      <FindTheItemQuestionEditorDialog
+        open={findItemEditorOpen}
+        onOpenChange={handleFindItemOpenChange}
+        gameId={FIND_THE_ITEM_GAME_ID}
+        initialQuestion={editingFindItemQuestion ?? undefined}
+      />
+
+      {/* Delete confirmation dialog */}
+      <ConfirmDeleteDialog
+        open={!!deletingQuestionId}
+        onOpenChange={(open) => {
+          if (!open) setDeletingQuestionId(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        gameName="this question"
+        isDeleting={isDeleting}
       />
     </div>
   );

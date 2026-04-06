@@ -1,16 +1,18 @@
 import type { ChooseCorrectImageQuestion } from "@/backend";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, Pencil } from "lucide-react";
+import { CheckCircle2, Pencil, Trash2 } from "lucide-react";
 
 interface ChooseCorrectImageQuestionListProps {
   questions: ChooseCorrectImageQuestion[];
   onEdit: (question: ChooseCorrectImageQuestion) => void;
+  onDelete: (questionId: string) => void;
 }
 
 export default function ChooseCorrectImageQuestionList({
   questions,
   onEdit,
+  onDelete,
 }: ChooseCorrectImageQuestionListProps) {
   return (
     <div className="space-y-6">
@@ -33,17 +35,30 @@ export default function ChooseCorrectImageQuestionList({
                   Question ID: {question.id} • {question.images.length} images
                 </p>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="flex-shrink-0 gap-1.5"
-                onClick={() => onEdit(question)}
-                data-ocid={`choose_image_question.edit_button.${idx + 1}`}
-              >
-                <Pencil className="h-3.5 w-3.5" />
-                Edit
-              </Button>
+              <div className="flex gap-2 flex-shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => onEdit(question)}
+                  data-ocid={`choose_image_question.edit_button.${idx + 1}`}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Edit
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => onDelete(question.id)}
+                  data-ocid={`choose_image_question.delete_button.${idx + 1}`}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

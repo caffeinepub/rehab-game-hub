@@ -89,6 +89,11 @@ export class ExternalBlob {
         return this;
     }
 }
+export interface FindTheItemQuestion {
+    id: string;
+    backgroundImage: ExternalBlob;
+    items: Array<FindTheItemPlacedItem>;
+}
 export interface Game {
     id: GameId;
     primaryColor: string;
@@ -98,6 +103,14 @@ export interface Game {
     tags: Array<string>;
     description: string;
     secondaryColor: string;
+}
+export interface FindTheItemPlacedItem {
+    x: number;
+    y: number;
+    height: number;
+    itemLabel: string;
+    image: ExternalBlob;
+    width: number;
 }
 export interface PlayerSession {
     gameId: string;
@@ -141,9 +154,11 @@ export interface backendInterface {
     _caffeineStorageRefillCashier(refillInformation: _CaffeineStorageRefillInformation | null): Promise<_CaffeineStorageRefillResult>;
     _caffeineStorageUpdateGatewayPrincipals(): Promise<void>;
     createChooseCorrectImageQuestion(gameId: GameId, word: string, images: Array<ExternalBlob>, correctImageIndex: bigint): Promise<ChooseCorrectImageQuestion>;
+    createFindTheItemQuestion(gameId: GameId, backgroundImage: ExternalBlob, items: Array<FindTheItemPlacedItem>): Promise<FindTheItemQuestion>;
     createGame(id: GameId, name: string, description: string, icon: string, badges: Array<string>, primaryColor: string, secondaryColor: string, tags: Array<string>): Promise<void>;
     createQuestion(gameId: GameId, image: ExternalBlob, options: Array<Option>, correctOption: Option): Promise<QuestionId>;
     getAllChooseCorrectImageQuestions(gameId: GameId): Promise<Array<ChooseCorrectImageQuestion>>;
+    getAllFindTheItemQuestions(gameId: GameId): Promise<Array<FindTheItemQuestion>>;
     getAllGames(): Promise<Array<Game>>;
     getAllQuestions(gameId: GameId): Promise<Array<MatchWordToImageQuestion>>;
     getGameById(id: GameId): Promise<Game>;
@@ -152,10 +167,11 @@ export interface backendInterface {
     getQuestion(gameId: GameId, questionId: QuestionId): Promise<MatchWordToImageQuestion | null>;
     saveGameSession(gameId: string, gameName: string, correct: bigint, wrong: bigint, durationSeconds: bigint): Promise<void>;
     updateChooseCorrectImageQuestion(gameId: GameId, questionId: string, word: string, images: Array<ExternalBlob>, correctImageIndex: bigint): Promise<void>;
+    updateFindTheItemQuestion(gameId: GameId, questionId: string, backgroundImage: ExternalBlob, items: Array<FindTheItemPlacedItem>): Promise<void>;
     updateGame(id: GameId, name: string, description: string, icon: string, badges: Array<string>, primaryColor: string, secondaryColor: string, tags: Array<string>): Promise<void>;
     updateQuestion(gameId: GameId, questionId: QuestionId, image: ExternalBlob, options: Array<Option>, correctOption: Option): Promise<void>;
 }
-import type { ChooseCorrectImageQuestion as _ChooseCorrectImageQuestion, ExternalBlob as _ExternalBlob, MatchWordToImageQuestion as _MatchWordToImageQuestion, Option as _Option, QuestionId as _QuestionId, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { ChooseCorrectImageQuestion as _ChooseCorrectImageQuestion, ExternalBlob as _ExternalBlob, FindTheItemPlacedItem as _FindTheItemPlacedItem, FindTheItemQuestion as _FindTheItemQuestion, MatchWordToImageQuestion as _MatchWordToImageQuestion, Option as _Option, QuestionId as _QuestionId, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -256,6 +272,20 @@ export class Backend implements backendInterface {
             return from_candid_ChooseCorrectImageQuestion_n10(this._uploadFile, this._downloadFile, result);
         }
     }
+    async createFindTheItemQuestion(arg0: GameId, arg1: ExternalBlob, arg2: Array<FindTheItemPlacedItem>): Promise<FindTheItemQuestion> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createFindTheItemQuestion(arg0, await to_candid_ExternalBlob_n9(this._uploadFile, this._downloadFile, arg1), await to_candid_vec_n14(this._uploadFile, this._downloadFile, arg2));
+                return from_candid_FindTheItemQuestion_n17(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createFindTheItemQuestion(arg0, await to_candid_ExternalBlob_n9(this._uploadFile, this._downloadFile, arg1), await to_candid_vec_n14(this._uploadFile, this._downloadFile, arg2));
+            return from_candid_FindTheItemQuestion_n17(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async createGame(arg0: GameId, arg1: string, arg2: string, arg3: string, arg4: Array<string>, arg5: string, arg6: string, arg7: Array<string>): Promise<void> {
         if (this.processError) {
             try {
@@ -288,14 +318,28 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getAllChooseCorrectImageQuestions(arg0);
-                return from_candid_vec_n14(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n22(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getAllChooseCorrectImageQuestions(arg0);
-            return from_candid_vec_n14(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n22(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAllFindTheItemQuestions(arg0: GameId): Promise<Array<FindTheItemQuestion>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllFindTheItemQuestions(arg0);
+                return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllFindTheItemQuestions(arg0);
+            return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
         }
     }
     async getAllGames(): Promise<Array<Game>> {
@@ -316,14 +360,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getAllQuestions(arg0);
-                return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n24(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getAllQuestions(arg0);
-            return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n24(this._uploadFile, this._downloadFile, result);
         }
     }
     async getGameById(arg0: GameId): Promise<Game> {
@@ -372,14 +416,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getQuestion(arg0, arg1);
-                return from_candid_opt_n18(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getQuestion(arg0, arg1);
-            return from_candid_opt_n18(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
         }
     }
     async saveGameSession(arg0: string, arg1: string, arg2: bigint, arg3: bigint, arg4: bigint): Promise<void> {
@@ -407,6 +451,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateChooseCorrectImageQuestion(arg0, arg1, arg2, await to_candid_vec_n8(this._uploadFile, this._downloadFile, arg3), arg4);
+            return result;
+        }
+    }
+    async updateFindTheItemQuestion(arg0: GameId, arg1: string, arg2: ExternalBlob, arg3: Array<FindTheItemPlacedItem>): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateFindTheItemQuestion(arg0, arg1, await to_candid_ExternalBlob_n9(this._uploadFile, this._downloadFile, arg2), await to_candid_vec_n14(this._uploadFile, this._downloadFile, arg3));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateFindTheItemQuestion(arg0, arg1, await to_candid_ExternalBlob_n9(this._uploadFile, this._downloadFile, arg2), await to_candid_vec_n14(this._uploadFile, this._downloadFile, arg3));
             return result;
         }
     }
@@ -445,14 +503,20 @@ async function from_candid_ChooseCorrectImageQuestion_n10(_uploadFile: (file: Ex
 async function from_candid_ExternalBlob_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ExternalBlob): Promise<ExternalBlob> {
     return await _downloadFile(value);
 }
-async function from_candid_MatchWordToImageQuestion_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _MatchWordToImageQuestion): Promise<MatchWordToImageQuestion> {
-    return await from_candid_record_n17(_uploadFile, _downloadFile, value);
+async function from_candid_FindTheItemPlacedItem_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _FindTheItemPlacedItem): Promise<FindTheItemPlacedItem> {
+    return await from_candid_record_n21(_uploadFile, _downloadFile, value);
+}
+async function from_candid_FindTheItemQuestion_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _FindTheItemQuestion): Promise<FindTheItemQuestion> {
+    return await from_candid_record_n18(_uploadFile, _downloadFile, value);
+}
+async function from_candid_MatchWordToImageQuestion_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _MatchWordToImageQuestion): Promise<MatchWordToImageQuestion> {
+    return await from_candid_record_n26(_uploadFile, _downloadFile, value);
 }
 function from_candid__CaffeineStorageRefillResult_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: __CaffeineStorageRefillResult): _CaffeineStorageRefillResult {
     return from_candid_record_n5(_uploadFile, _downloadFile, value);
 }
-async function from_candid_opt_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_MatchWordToImageQuestion]): Promise<MatchWordToImageQuestion | null> {
-    return value.length === 0 ? null : await from_candid_MatchWordToImageQuestion_n16(_uploadFile, _downloadFile, value[0]);
+async function from_candid_opt_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_MatchWordToImageQuestion]): Promise<MatchWordToImageQuestion | null> {
+    return value.length === 0 ? null : await from_candid_MatchWordToImageQuestion_n25(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [boolean]): boolean | null {
     return value.length === 0 ? null : value[0];
@@ -478,7 +542,46 @@ async function from_candid_record_n11(_uploadFile: (file: ExternalBlob) => Promi
         images: await from_candid_vec_n12(_uploadFile, _downloadFile, value.images)
     };
 }
-async function from_candid_record_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+async function from_candid_record_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: string;
+    backgroundImage: _ExternalBlob;
+    items: Array<_FindTheItemPlacedItem>;
+}): Promise<{
+    id: string;
+    backgroundImage: ExternalBlob;
+    items: Array<FindTheItemPlacedItem>;
+}> {
+    return {
+        id: value.id,
+        backgroundImage: await from_candid_ExternalBlob_n13(_uploadFile, _downloadFile, value.backgroundImage),
+        items: await from_candid_vec_n19(_uploadFile, _downloadFile, value.items)
+    };
+}
+async function from_candid_record_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    x: number;
+    y: number;
+    height: number;
+    itemLabel: string;
+    image: _ExternalBlob;
+    width: number;
+}): Promise<{
+    x: number;
+    y: number;
+    height: number;
+    itemLabel: string;
+    image: ExternalBlob;
+    width: number;
+}> {
+    return {
+        x: value.x,
+        y: value.y,
+        height: value.height,
+        itemLabel: value.itemLabel,
+        image: await from_candid_ExternalBlob_n13(_uploadFile, _downloadFile, value.image),
+        width: value.width
+    };
+}
+async function from_candid_record_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: _QuestionId;
     correctOption: _Option;
     image: _ExternalBlob;
@@ -511,20 +614,53 @@ function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint
 async function from_candid_vec_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_ExternalBlob>): Promise<Array<ExternalBlob>> {
     return await Promise.all(value.map(async (x)=>await from_candid_ExternalBlob_n13(_uploadFile, _downloadFile, x)));
 }
-async function from_candid_vec_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_ChooseCorrectImageQuestion>): Promise<Array<ChooseCorrectImageQuestion>> {
+async function from_candid_vec_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_FindTheItemPlacedItem>): Promise<Array<FindTheItemPlacedItem>> {
+    return await Promise.all(value.map(async (x)=>await from_candid_FindTheItemPlacedItem_n20(_uploadFile, _downloadFile, x)));
+}
+async function from_candid_vec_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_ChooseCorrectImageQuestion>): Promise<Array<ChooseCorrectImageQuestion>> {
     return await Promise.all(value.map(async (x)=>await from_candid_ChooseCorrectImageQuestion_n10(_uploadFile, _downloadFile, x)));
 }
-async function from_candid_vec_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_MatchWordToImageQuestion>): Promise<Array<MatchWordToImageQuestion>> {
-    return await Promise.all(value.map(async (x)=>await from_candid_MatchWordToImageQuestion_n16(_uploadFile, _downloadFile, x)));
+async function from_candid_vec_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_FindTheItemQuestion>): Promise<Array<FindTheItemQuestion>> {
+    return await Promise.all(value.map(async (x)=>await from_candid_FindTheItemQuestion_n17(_uploadFile, _downloadFile, x)));
+}
+async function from_candid_vec_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_MatchWordToImageQuestion>): Promise<Array<MatchWordToImageQuestion>> {
+    return await Promise.all(value.map(async (x)=>await from_candid_MatchWordToImageQuestion_n25(_uploadFile, _downloadFile, x)));
 }
 async function to_candid_ExternalBlob_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ExternalBlob): Promise<_ExternalBlob> {
     return await _uploadFile(value);
+}
+async function to_candid_FindTheItemPlacedItem_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: FindTheItemPlacedItem): Promise<_FindTheItemPlacedItem> {
+    return await to_candid_record_n16(_uploadFile, _downloadFile, value);
 }
 function to_candid__CaffeineStorageRefillInformation_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _CaffeineStorageRefillInformation): __CaffeineStorageRefillInformation {
     return to_candid_record_n3(_uploadFile, _downloadFile, value);
 }
 function to_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _CaffeineStorageRefillInformation | null): [] | [__CaffeineStorageRefillInformation] {
     return value === null ? candid_none() : candid_some(to_candid__CaffeineStorageRefillInformation_n2(_uploadFile, _downloadFile, value));
+}
+async function to_candid_record_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    x: number;
+    y: number;
+    height: number;
+    itemLabel: string;
+    image: ExternalBlob;
+    width: number;
+}): Promise<{
+    x: number;
+    y: number;
+    height: number;
+    itemLabel: string;
+    image: _ExternalBlob;
+    width: number;
+}> {
+    return {
+        x: value.x,
+        y: value.y,
+        height: value.height,
+        itemLabel: value.itemLabel,
+        image: await to_candid_ExternalBlob_n9(_uploadFile, _downloadFile, value.image),
+        width: value.width
+    };
 }
 function to_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     proposed_top_up_amount?: bigint;
@@ -534,6 +670,9 @@ function to_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
     return {
         proposed_top_up_amount: value.proposed_top_up_amount ? candid_some(value.proposed_top_up_amount) : candid_none()
     };
+}
+async function to_candid_vec_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<FindTheItemPlacedItem>): Promise<Array<_FindTheItemPlacedItem>> {
+    return await Promise.all(value.map(async (x)=>await to_candid_FindTheItemPlacedItem_n15(_uploadFile, _downloadFile, x)));
 }
 async function to_candid_vec_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<ExternalBlob>): Promise<Array<_ExternalBlob>> {
     return await Promise.all(value.map(async (x)=>await to_candid_ExternalBlob_n9(_uploadFile, _downloadFile, x)));

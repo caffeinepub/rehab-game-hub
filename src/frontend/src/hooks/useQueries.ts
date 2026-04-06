@@ -1,6 +1,8 @@
 import type {
   ChooseCorrectImageQuestion,
   ExternalBlob,
+  FindTheItemPlacedItem,
+  FindTheItemQuestion,
   Game,
   MatchWordToImageQuestion,
   PlayerSession,
@@ -307,6 +309,154 @@ export function useUpdateChooseCorrectImageQuestion() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["chooseCorrectImageQuestions", variables.gameId],
+      });
+    },
+  });
+}
+
+// Question CRUD hooks for Find The Item
+
+export function useGetAllFindTheItemQuestions(gameId: string) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<FindTheItemQuestion[]>({
+    queryKey: ["findTheItemQuestions", gameId],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllFindTheItemQuestions(gameId);
+    },
+    enabled: !!actor && !isFetching && !!gameId,
+  });
+}
+
+export function useCreateFindTheItemQuestion() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      gameId,
+      backgroundImage,
+      items,
+    }: {
+      gameId: string;
+      backgroundImage: ExternalBlob;
+      items: FindTheItemPlacedItem[];
+    }) => {
+      if (!actor) throw new Error("Actor not initialized");
+
+      if (items.length < 2) {
+        throw new Error("At least 2 items are required");
+      }
+
+      const createdQuestion = await actor.createFindTheItemQuestion(
+        gameId,
+        backgroundImage,
+        items,
+      );
+      return createdQuestion;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["findTheItemQuestions", variables.gameId],
+      });
+    },
+  });
+}
+
+export function useUpdateFindTheItemQuestion() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      gameId,
+      questionId,
+      backgroundImage,
+      items,
+    }: {
+      gameId: string;
+      questionId: string;
+      backgroundImage: ExternalBlob;
+      items: FindTheItemPlacedItem[];
+    }) => {
+      if (!actor) throw new Error("Actor not initialized");
+
+      if (items.length < 2) {
+        throw new Error("At least 2 items are required");
+      }
+
+      await actor.updateFindTheItemQuestion(
+        gameId,
+        questionId,
+        backgroundImage,
+        items,
+      );
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["findTheItemQuestions", variables.gameId],
+      });
+    },
+  });
+}
+
+// Delete question hooks
+// Note: delete methods exist in backend.d.ts but are not yet reflected in the
+// generated backend.ts interface, so we cast to any to call them.
+
+export function useDeleteQuestion() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      gameId,
+      questionId,
+    }: { gameId: string; questionId: string }) => {
+      if (!actor) throw new Error("Actor not initialized");
+      await (actor as any).deleteQuestion(gameId, questionId);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["questions", variables.gameId],
+      });
+    },
+  });
+}
+
+export function useDeleteChooseCorrectImageQuestion() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      gameId,
+      questionId,
+    }: { gameId: string; questionId: string }) => {
+      if (!actor) throw new Error("Actor not initialized");
+      await (actor as any).deleteChooseCorrectImageQuestion(gameId, questionId);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["chooseCorrectImageQuestions", variables.gameId],
+      });
+    },
+  });
+}
+
+export function useDeleteFindTheItemQuestion() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      gameId,
+      questionId,
+    }: { gameId: string; questionId: string }) => {
+      if (!actor) throw new Error("Actor not initialized");
+      await (actor as any).deleteFindTheItemQuestion(gameId, questionId);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["findTheItemQuestions", variables.gameId],
       });
     },
   });

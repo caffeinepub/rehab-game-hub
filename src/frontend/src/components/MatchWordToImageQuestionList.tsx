@@ -2,12 +2,13 @@ import type { MatchWordToImageQuestion } from "@/backend";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { blobToObjectURL } from "@/lib/externalBlob";
-import { Loader2, Pencil } from "lucide-react";
+import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 interface MatchWordToImageQuestionListProps {
   questions: MatchWordToImageQuestion[];
   onEdit: (question: MatchWordToImageQuestion) => void;
+  onDelete: (questionId: string) => void;
 }
 
 interface QuestionWithURL extends MatchWordToImageQuestion {
@@ -17,6 +18,7 @@ interface QuestionWithURL extends MatchWordToImageQuestion {
 export default function MatchWordToImageQuestionList({
   questions,
   onEdit,
+  onDelete,
 }: MatchWordToImageQuestionListProps) {
   const [questionsWithUrls, setQuestionsWithUrls] = useState<QuestionWithURL[]>(
     [],
@@ -87,17 +89,29 @@ export default function MatchWordToImageQuestionList({
                 Failed to load image
               </div>
             )}
-            {/* Edit button — top-right corner of the image */}
-            <Button
-              type="button"
-              variant="secondary"
-              size="icon"
-              className="absolute top-2 right-2 h-8 w-8 shadow-md"
-              onClick={() => onEdit(question)}
-              data-ocid={`match_word_question.edit_button.${idx + 1}`}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
+            {/* Action buttons — top-right corner of the image */}
+            <div className="absolute top-2 right-2 flex gap-1">
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                className="h-8 w-8 shadow-md"
+                onClick={() => onEdit(question)}
+                data-ocid={`match_word_question.edit_button.${idx + 1}`}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="h-8 w-8 shadow-md"
+                onClick={() => onDelete(question.id)}
+                data-ocid={`match_word_question.delete_button.${idx + 1}`}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           <CardContent className="p-4">
             <div className="space-y-2">

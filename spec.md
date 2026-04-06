@@ -1,30 +1,31 @@
 # BrainBloom
 
 ## Current State
-- GameLaunchPage fetches questions and passes the full list to MatchWordToImageGame or ChooseCorrectImageGame.
-- Both game components receive a `questions` prop and always play all questions.
-- No pre-game configuration exists; the game starts immediately on page load once questions are fetched.
+The Game Manager lets admins create and edit questions for all three games (Choose The Word, Choose The Image, Find The Item), but there is no way to delete a question. The backend has no delete endpoints for any question type. The question list components (MatchWordToImageQuestionList, ChooseCorrectImageQuestionList, FindTheItemQuestionList) only have Edit buttons. A ConfirmDeleteDialog component exists but is currently only used for game deletion (which itself is a stub).
 
 ## Requested Changes (Diff)
 
 ### Add
-- A `GameConfigScreen` component that appears between the loading stage and the game start.
-- The config screen shows the game name, total available questions, and a slider to choose how many questions to play.
-- The slider range is from 1 (or a smart minimum) up to the total count, with smart step increments so it doesn't go 1-by-1 on large sets. The final position is always "All" (the total).
-- The selected count is displayed clearly (e.g. "10 questions" or "All 15 questions").
-- A "Start Game" button launches the game with the selected question count.
-- If questions available < selected count, just play all available (already handled by capping at total).
+- `deleteQuestion(gameId, questionId)` function in `main.mo` for MatchWordToImage questions
+- `deleteChooseCorrectImageQuestion(gameId, questionId)` function in `main.mo`
+- `deleteFindTheItemQuestion(gameId, questionId)` function in `main.mo`
+- `useDeleteQuestion`, `useDeleteChooseCorrectImageQuestion`, `useDeleteFindTheItemQuestion` mutation hooks in `useQueries.ts`
+- Delete button (trash icon) on each question card in all three question list components
+- Confirmation dialog before deleting (reuse existing ConfirmDeleteDialog or a question-specific variant)
 
 ### Modify
-- `GameLaunchPage`: After questions load, show `GameConfigScreen` instead of immediately launching the game. On confirm, slice/limit the questions array to the chosen count and pass it to the game component.
-- Both game components: No internal changes needed; they already accept a `questions` prop and play exactly what is passed.
+- `MatchWordToImageQuestionList` — add `onDelete` prop and a delete button per card
+- `ChooseCorrectImageQuestionList` — add `onDelete` prop and a delete button per card
+- `FindTheItemQuestionList` — add `onDelete` prop and a delete button per card
+- `GameManagerPage` — wire up delete handlers and confirmation dialog state for all three question types
+- `backend.d.ts` — add the three delete function signatures
 
 ### Remove
-- Nothing removed.
+- Nothing removed
 
 ## Implementation Plan
-1. Create `src/frontend/src/components/GameConfigScreen.tsx` with slider + Start Game button.
-2. Add state to `GameLaunchPage`: `configDone: boolean` and `questionLimit: number`.
-3. When questions are loaded and `configDone` is false, render `GameConfigScreen`.
-4. On confirm, set `configDone = true` and slice questions to `questionLimit` before passing to game component.
-5. Smart step calculation: for N total questions, produce ~5-6 steps (e.g. 25%, 50%, 75%, 100%) mapped to actual question counts, always including 1 and N.
+1. Add three delete functions to `main.mo` (filter out the matching question ID from the list)
+2. Update `backend.d.ts` with the three delete method signatures
+3. Add three delete mutation hooks to `useQueries.ts`
+4. Update all three question list components to accept and show a delete button
+5. Update `GameManagerPage` to hold delete confirmation state and wire up all three delete flows

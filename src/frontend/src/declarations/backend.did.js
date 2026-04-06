@@ -27,6 +27,19 @@ export const ChooseCorrectImageQuestion = IDL.Record({
   'word' : IDL.Text,
   'images' : IDL.Vec(ExternalBlob),
 });
+export const FindTheItemPlacedItem = IDL.Record({
+  'x' : IDL.Float64,
+  'y' : IDL.Float64,
+  'height' : IDL.Float64,
+  'itemLabel' : IDL.Text,
+  'image' : ExternalBlob,
+  'width' : IDL.Float64,
+});
+export const FindTheItemQuestion = IDL.Record({
+  'id' : IDL.Text,
+  'backgroundImage' : ExternalBlob,
+  'items' : IDL.Vec(FindTheItemPlacedItem),
+});
 export const Option = IDL.Text;
 export const QuestionId = IDL.Text;
 export const Game = IDL.Record({
@@ -86,6 +99,11 @@ export const idlService = IDL.Service({
       [ChooseCorrectImageQuestion],
       [],
     ),
+  'createFindTheItemQuestion' : IDL.Func(
+      [GameId, ExternalBlob, IDL.Vec(FindTheItemPlacedItem)],
+      [FindTheItemQuestion],
+      [],
+    ),
   'createGame' : IDL.Func(
       [
         GameId,
@@ -110,6 +128,11 @@ export const idlService = IDL.Service({
       [IDL.Vec(ChooseCorrectImageQuestion)],
       ['query'],
     ),
+  'getAllFindTheItemQuestions' : IDL.Func(
+      [GameId],
+      [IDL.Vec(FindTheItemQuestion)],
+      ['query'],
+    ),
   'getAllGames' : IDL.Func([], [IDL.Vec(Game)], ['query']),
   'getAllQuestions' : IDL.Func(
       [GameId],
@@ -131,6 +154,11 @@ export const idlService = IDL.Service({
     ),
   'updateChooseCorrectImageQuestion' : IDL.Func(
       [GameId, IDL.Text, IDL.Text, IDL.Vec(ExternalBlob), IDL.Nat],
+      [],
+      [],
+    ),
+  'updateFindTheItemQuestion' : IDL.Func(
+      [GameId, IDL.Text, ExternalBlob, IDL.Vec(FindTheItemPlacedItem)],
       [],
       [],
     ),
@@ -176,6 +204,19 @@ export const idlFactory = ({ IDL }) => {
     'correctImageIndex' : IDL.Nat,
     'word' : IDL.Text,
     'images' : IDL.Vec(ExternalBlob),
+  });
+  const FindTheItemPlacedItem = IDL.Record({
+    'x' : IDL.Float64,
+    'y' : IDL.Float64,
+    'height' : IDL.Float64,
+    'itemLabel' : IDL.Text,
+    'image' : ExternalBlob,
+    'width' : IDL.Float64,
+  });
+  const FindTheItemQuestion = IDL.Record({
+    'id' : IDL.Text,
+    'backgroundImage' : ExternalBlob,
+    'items' : IDL.Vec(FindTheItemPlacedItem),
   });
   const Option = IDL.Text;
   const QuestionId = IDL.Text;
@@ -236,6 +277,11 @@ export const idlFactory = ({ IDL }) => {
         [ChooseCorrectImageQuestion],
         [],
       ),
+    'createFindTheItemQuestion' : IDL.Func(
+        [GameId, ExternalBlob, IDL.Vec(FindTheItemPlacedItem)],
+        [FindTheItemQuestion],
+        [],
+      ),
     'createGame' : IDL.Func(
         [
           GameId,
@@ -260,6 +306,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(ChooseCorrectImageQuestion)],
         ['query'],
       ),
+    'getAllFindTheItemQuestions' : IDL.Func(
+        [GameId],
+        [IDL.Vec(FindTheItemQuestion)],
+        ['query'],
+      ),
     'getAllGames' : IDL.Func([], [IDL.Vec(Game)], ['query']),
     'getAllQuestions' : IDL.Func(
         [GameId],
@@ -281,6 +332,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'updateChooseCorrectImageQuestion' : IDL.Func(
         [GameId, IDL.Text, IDL.Text, IDL.Vec(ExternalBlob), IDL.Nat],
+        [],
+        [],
+      ),
+    'updateFindTheItemQuestion' : IDL.Func(
+        [GameId, IDL.Text, ExternalBlob, IDL.Vec(FindTheItemPlacedItem)],
         [],
         [],
       ),

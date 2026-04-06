@@ -14,6 +14,11 @@ export class ExternalBlob {
     static fromBytes(blob: Uint8Array<ArrayBuffer>): ExternalBlob;
     withUploadProgress(onProgress: (percentage: number) => void): ExternalBlob;
 }
+export interface FindTheItemQuestion {
+    id: string;
+    backgroundImage: ExternalBlob;
+    items: Array<FindTheItemPlacedItem>;
+}
 export interface Game {
     id: GameId;
     primaryColor: string;
@@ -23,6 +28,14 @@ export interface Game {
     tags: Array<string>;
     description: string;
     secondaryColor: string;
+}
+export interface FindTheItemPlacedItem {
+    x: number;
+    y: number;
+    height: number;
+    itemLabel: string;
+    image: ExternalBlob;
+    width: number;
 }
 export interface PlayerSession {
     gameId: string;
@@ -49,9 +62,14 @@ export interface ChooseCorrectImageQuestion {
 }
 export interface backendInterface {
     createChooseCorrectImageQuestion(gameId: GameId, word: string, images: Array<ExternalBlob>, correctImageIndex: bigint): Promise<ChooseCorrectImageQuestion>;
+    createFindTheItemQuestion(gameId: GameId, backgroundImage: ExternalBlob, items: Array<FindTheItemPlacedItem>): Promise<FindTheItemQuestion>;
     createGame(id: GameId, name: string, description: string, icon: string, badges: Array<string>, primaryColor: string, secondaryColor: string, tags: Array<string>): Promise<void>;
     createQuestion(gameId: GameId, image: ExternalBlob, options: Array<Option>, correctOption: Option): Promise<QuestionId>;
+    deleteChooseCorrectImageQuestion(gameId: GameId, questionId: string): Promise<void>;
+    deleteFindTheItemQuestion(gameId: GameId, questionId: string): Promise<void>;
+    deleteQuestion(gameId: GameId, questionId: QuestionId): Promise<void>;
     getAllChooseCorrectImageQuestions(gameId: GameId): Promise<Array<ChooseCorrectImageQuestion>>;
+    getAllFindTheItemQuestions(gameId: GameId): Promise<Array<FindTheItemQuestion>>;
     getAllGames(): Promise<Array<Game>>;
     getAllQuestions(gameId: GameId): Promise<Array<MatchWordToImageQuestion>>;
     getGameById(id: GameId): Promise<Game>;
@@ -60,6 +78,7 @@ export interface backendInterface {
     getQuestion(gameId: GameId, questionId: QuestionId): Promise<MatchWordToImageQuestion | null>;
     saveGameSession(gameId: string, gameName: string, correct: bigint, wrong: bigint, durationSeconds: bigint): Promise<void>;
     updateChooseCorrectImageQuestion(gameId: GameId, questionId: string, word: string, images: Array<ExternalBlob>, correctImageIndex: bigint): Promise<void>;
+    updateFindTheItemQuestion(gameId: GameId, questionId: string, backgroundImage: ExternalBlob, items: Array<FindTheItemPlacedItem>): Promise<void>;
     updateGame(id: GameId, name: string, description: string, icon: string, badges: Array<string>, primaryColor: string, secondaryColor: string, tags: Array<string>): Promise<void>;
     updateQuestion(gameId: GameId, questionId: QuestionId, image: ExternalBlob, options: Array<Option>, correctOption: Option): Promise<void>;
 }

@@ -7,9 +7,13 @@ import Nat "mo:core/Nat";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
 import Time "mo:core/Time";
+import Float "mo:core/Float";
+
 
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
+
+// Add with clause to apply migration after it was resumed from persistent state
 
 actor {
   include MixinStorage();
@@ -17,6 +21,7 @@ actor {
   type GameId = Text;
   let VR_GAME_ID = "vr-find-x";
   let CHOOSE_CORRECT_IMAGE_GAME_ID = "choose-correct-image";
+  let FIND_THE_ITEM_GAME_ID = "find-the-item";
   let CORRECT_IMAGE_QUESTIONS = "choose-correct-image-questions";
 
   public type Game = {
@@ -47,6 +52,21 @@ actor {
     correctImageIndex : Nat;
   };
 
+  public type FindTheItemPlacedItem = {
+    image : Storage.ExternalBlob;
+    x : Float;
+    y : Float;
+    width : Float;
+    height : Float;
+    itemLabel : Text;
+  };
+
+  public type FindTheItemQuestion = {
+    id : Text;
+    backgroundImage : Storage.ExternalBlob;
+    items : [FindTheItemPlacedItem];
+  };
+
   public type PlayerSession = {
     gameId : Text;
     gameName : Text;
@@ -59,6 +79,7 @@ actor {
   var persistentGames = Map.empty<GameId, Game>();
   var persistentQuestions = Map.empty<GameId, List.List<MatchWordToImageQuestion>>();
   var persistentChooseCorrectImageQuestions = Map.empty<GameId, List.List<ChooseCorrectImageQuestion>>();
+  var persistentFindTheItemQuestions = Map.empty<GameId, List.List<FindTheItemQuestion>>();
   var persistentPlayerSessions = Map.empty<Principal, List.List<PlayerSession>>();
   var _nextQuestionId = 0;
 
@@ -222,6 +243,23 @@ actor {
     };
   };
 
+  public shared ({ caller }) func deleteQuestion(
+    gameId : GameId,
+    questionId : QuestionId,
+  ) : async () {
+    switch (persistentQuestions.get(gameId)) {
+      case (null) { Runtime.trap("No questions found for game.") };
+      case (?questions) {
+        let filtered = questions.filter(
+          func(q : MatchWordToImageQuestion) : Bool {
+            q.id != questionId;
+          }
+        );
+        persistentQuestions.add(gameId, filtered);
+      };
+    };
+  };
+
   public query ({ caller }) func getAllQuestions(gameId : GameId) : async [MatchWordToImageQuestion] {
     switch (persistentQuestions.get(gameId)) {
       case (null) { [] };
@@ -333,8 +371,130 @@ actor {
     };
   };
 
+  public shared ({ caller }) func deleteChooseCorrectImageQuestion(
+    gameId : GameId,
+    questionId : Text,
+  ) : async () {
+    switch (persistentChooseCorrectImageQuestions.get(gameId)) {
+      case (null) { Runtime.trap("No questions found for game.") };
+      case (?questions) {
+        let filtered = questions.filter(
+          func(q : ChooseCorrectImageQuestion) : Bool {
+            q.id != questionId;
+          }
+        );
+        persistentChooseCorrectImageQuestions.add(gameId, filtered);
+      };
+    };
+  };
+
   public query ({ caller }) func getAllChooseCorrectImageQuestions(gameId : GameId) : async [ChooseCorrectImageQuestion] {
     switch (persistentChooseCorrectImageQuestions.get(gameId)) {
+      case (null) { [] };
+      case (?questions) { questions.toArray() };
+    };
+  };
+
+  public shared ({ caller }) func createFindTheItemQuestion(
+    gameId : GameId,
+    backgroundImage : Storage.ExternalBlob,
+    items : [FindTheItemPlacedItem],
+  ) : async FindTheItemQuestion {
+    if (items.size() < 2) {
+      Runtime.trap("At least 2 items are required.");
+    };
+
+    let questionId = _nextQuestionId.toText();
+    _nextQuestionId += 1;
+
+    let newQuestion : FindTheItemQuestion = {
+      id = questionId;
+      backgroundImage;
+      items;
+    };
+
+    switch (persistentFindTheItemQuestions.get(gameId)) {
+      case (null) {
+        let newList = List.empty<FindTheItemQuestion>();
+        newList.add(newQuestion);
+        persistentFindTheItemQuestions.add(gameId, newList);
+      };
+      case (?existingQuestions) {
+        existingQuestions.add(newQuestion);
+      };
+    };
+    newQuestion;
+  };
+
+  public shared ({ caller }) func updateFindTheItemQuestion(
+    gameId : GameId,
+    questionId : Text,
+    backgroundImage : Storage.ExternalBlob,
+    items : [FindTheItemPlacedItem],
+  ) : async () {
+    if (items.size() < 2) {
+      Runtime.trap("At least 2 items are required.");
+    };
+
+    if (not persistentFindTheItemQuestions.containsKey(gameId)) {
+      Runtime.trap("Game with specified ID does not exist.");
+    };
+
+    let updatedQuestion : FindTheItemQuestion = {
+      id = questionId;
+      backgroundImage;
+      items;
+    };
+
+    switch (persistentFindTheItemQuestions.get(gameId)) {
+      case (null) {
+        Runtime.trap("No questions found for game. This should not happen, as game existence is checked before.");
+      };
+      case (?questions) {
+        if (questions.isEmpty()) {
+          Runtime.trap("No questions found for game. This should not happen, as game existence is checked before.");
+        };
+
+        var found = false;
+        let newQuestions = questions.map<FindTheItemQuestion, FindTheItemQuestion>(
+          func(question) {
+            if (question.id == questionId) {
+              found := true;
+              updatedQuestion;
+            } else {
+              question;
+            };
+          }
+        );
+
+        if (not found) {
+          Runtime.trap("Question with specified ID does not exist.");
+        };
+
+        persistentFindTheItemQuestions.add(gameId, newQuestions);
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteFindTheItemQuestion(
+    gameId : GameId,
+    questionId : Text,
+  ) : async () {
+    switch (persistentFindTheItemQuestions.get(gameId)) {
+      case (null) { Runtime.trap("No questions found for game.") };
+      case (?questions) {
+        let filtered = questions.filter(
+          func(q : FindTheItemQuestion) : Bool {
+            q.id != questionId;
+          }
+        );
+        persistentFindTheItemQuestions.add(gameId, filtered);
+      };
+    };
+  };
+
+  public query ({ caller }) func getAllFindTheItemQuestions(gameId : GameId) : async [FindTheItemQuestion] {
+    switch (persistentFindTheItemQuestions.get(gameId)) {
       case (null) { [] };
       case (?questions) { questions.toArray() };
     };

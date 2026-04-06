@@ -17,6 +17,19 @@ export interface ChooseCorrectImageQuestion {
   'images' : Array<ExternalBlob>,
 }
 export type ExternalBlob = Uint8Array;
+export interface FindTheItemPlacedItem {
+  'x' : number,
+  'y' : number,
+  'height' : number,
+  'itemLabel' : string,
+  'image' : ExternalBlob,
+  'width' : number,
+}
+export interface FindTheItemQuestion {
+  'id' : string,
+  'backgroundImage' : ExternalBlob,
+  'items' : Array<FindTheItemPlacedItem>,
+}
 export interface Game {
   'id' : GameId,
   'primaryColor' : string,
@@ -75,6 +88,10 @@ export interface _SERVICE {
     [GameId, string, Array<ExternalBlob>, bigint],
     ChooseCorrectImageQuestion
   >,
+  'createFindTheItemQuestion' : ActorMethod<
+    [GameId, ExternalBlob, Array<FindTheItemPlacedItem>],
+    FindTheItemQuestion
+  >,
   'createGame' : ActorMethod<
     [
       GameId,
@@ -96,6 +113,10 @@ export interface _SERVICE {
     [GameId],
     Array<ChooseCorrectImageQuestion>
   >,
+  'getAllFindTheItemQuestions' : ActorMethod<
+    [GameId],
+    Array<FindTheItemQuestion>
+  >,
   'getAllGames' : ActorMethod<[], Array<Game>>,
   'getAllQuestions' : ActorMethod<[GameId], Array<MatchWordToImageQuestion>>,
   'getGameById' : ActorMethod<[GameId], Game>,
@@ -111,6 +132,10 @@ export interface _SERVICE {
   >,
   'updateChooseCorrectImageQuestion' : ActorMethod<
     [GameId, string, string, Array<ExternalBlob>, bigint],
+    undefined
+  >,
+  'updateFindTheItemQuestion' : ActorMethod<
+    [GameId, string, ExternalBlob, Array<FindTheItemPlacedItem>],
     undefined
   >,
   'updateGame' : ActorMethod<

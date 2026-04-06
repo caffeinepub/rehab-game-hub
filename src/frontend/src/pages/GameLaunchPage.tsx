@@ -1,16 +1,19 @@
 import ChooseCorrectImageGame from "@/components/ChooseCorrectImageGame";
+import FindTheItemGame from "@/components/FindTheItemGame";
 import GameConfigScreen from "@/components/GameConfigScreen";
 import MatchWordToImageGame from "@/components/MatchWordToImageGame";
 import { Button } from "@/components/ui/button";
 import { useInternetIdentity } from "@/hooks/useInternetIdentity";
 import {
   useGetAllChooseCorrectImageQuestions,
+  useGetAllFindTheItemQuestions,
   useGetAllQuestions,
   useGetGameById,
   useSaveGameSession,
 } from "@/hooks/useQueries";
 import {
   CHOOSE_CORRECT_IMAGE_GAME_ID,
+  FIND_THE_ITEM_GAME_ID,
   MATCH_WORD_TO_IMAGE_GAME_ID,
   getGameMetadata,
 } from "@/lib/gameConstants";
@@ -48,17 +51,27 @@ export default function GameLaunchPage() {
   } = useGetAllChooseCorrectImageQuestions(
     gameId === CHOOSE_CORRECT_IMAGE_GAME_ID ? gameId : "",
   );
+  const {
+    data: findItemQuestions,
+    isLoading: findItemLoading,
+    error: findItemError,
+  } = useGetAllFindTheItemQuestions(
+    gameId === FIND_THE_ITEM_GAME_ID ? gameId : "",
+  );
 
   const isMatchWordToImageGame = gameId === MATCH_WORD_TO_IMAGE_GAME_ID;
   const isChooseCorrectImageGame = gameId === CHOOSE_CORRECT_IMAGE_GAME_ID;
+  const isFindTheItemGame = gameId === FIND_THE_ITEM_GAME_ID;
 
   const isLoading =
     gameLoading ||
     (isMatchWordToImageGame && matchWordLoading) ||
-    (isChooseCorrectImageGame && chooseImageLoading);
+    (isChooseCorrectImageGame && chooseImageLoading) ||
+    (isFindTheItemGame && findItemLoading);
   const error =
     (isMatchWordToImageGame && matchWordError) ||
-    (isChooseCorrectImageGame && chooseImageError);
+    (isChooseCorrectImageGame && chooseImageError) ||
+    (isFindTheItemGame && findItemError);
 
   const game = getGameMetadata(gameId, backendGame);
 
@@ -183,16 +196,13 @@ export default function GameLaunchPage() {
           isFullscreen ? "bg-background" : ""
         }`}
       >
-        {/* Mobile-only top button bar */}
         <div className="flex md:hidden w-full justify-between items-center">
           <BackButton />
           <FullscreenButton />
         </div>
-        {/* Desktop-only left back button */}
         <div className="hidden md:block">
           <BackButton />
         </div>
-        {/* Game content */}
         <div className="flex-1 min-w-0 w-full">
           {!configDone ? (
             <GameConfigScreen
@@ -212,7 +222,6 @@ export default function GameLaunchPage() {
             />
           )}
         </div>
-        {/* Desktop-only right fullscreen button */}
         <div className="hidden md:block">
           <FullscreenButton />
         </div>
@@ -237,16 +246,13 @@ export default function GameLaunchPage() {
           isFullscreen ? "bg-background" : ""
         }`}
       >
-        {/* Mobile-only top button bar */}
         <div className="flex md:hidden w-full justify-between items-center">
           <BackButton />
           <FullscreenButton />
         </div>
-        {/* Desktop-only left back button */}
         <div className="hidden md:block">
           <BackButton />
         </div>
-        {/* Game content */}
         <div className="flex-1 min-w-0 w-full">
           {!configDone ? (
             <GameConfigScreen
@@ -266,7 +272,52 @@ export default function GameLaunchPage() {
             />
           )}
         </div>
-        {/* Desktop-only right fullscreen button */}
+        <div className="hidden md:block">
+          <FullscreenButton />
+        </div>
+      </div>
+    );
+  }
+
+  // Find The Item
+  if (isFindTheItemGame && findItemQuestions && findItemQuestions.length > 0) {
+    const activeQuestions = questionLimit
+      ? findItemQuestions.slice(0, questionLimit)
+      : findItemQuestions;
+
+    return (
+      <div
+        ref={gameContainerRef}
+        className={`flex flex-col md:flex-row items-start gap-4 px-4 py-4 md:py-8 min-h-screen ${
+          isFullscreen ? "bg-background" : ""
+        }`}
+      >
+        <div className="flex md:hidden w-full justify-between items-center">
+          <BackButton />
+          <FullscreenButton />
+        </div>
+        <div className="hidden md:block">
+          <BackButton />
+        </div>
+        <div className="flex-1 min-w-0 w-full">
+          {!configDone ? (
+            <GameConfigScreen
+              gameName={game.name}
+              totalQuestions={findItemQuestions.length}
+              onStart={handleConfigStart}
+            />
+          ) : (
+            <FindTheItemGame
+              questions={activeQuestions}
+              gameName={game.name}
+              onGameComplete={handleGameComplete}
+              showSavePrompt={!identity}
+              onSignIn={login}
+              scoreSaved={scoreSaved}
+              onPlayAgain={handlePlayAgain}
+            />
+          )}
+        </div>
         <div className="hidden md:block">
           <FullscreenButton />
         </div>
@@ -278,15 +329,15 @@ export default function GameLaunchPage() {
     (isMatchWordToImageGame &&
       (!matchWordQuestions || matchWordQuestions.length === 0)) ||
     (isChooseCorrectImageGame &&
-      (!chooseImageQuestions || chooseImageQuestions.length === 0))
+      (!chooseImageQuestions || chooseImageQuestions.length === 0)) ||
+    (isFindTheItemGame &&
+      (!findItemQuestions || findItemQuestions.length === 0))
   ) {
     return (
       <div className="flex flex-col md:flex-row items-start gap-4 px-4 py-4 md:py-8 min-h-screen">
-        {/* Mobile-only top button bar */}
         <div className="flex md:hidden w-full justify-between items-center">
           <BackButton />
         </div>
-        {/* Desktop-only left back button */}
         <div className="hidden md:block">
           <BackButton />
         </div>
@@ -308,11 +359,9 @@ export default function GameLaunchPage() {
 
   return (
     <div className="flex flex-col md:flex-row items-start gap-4 px-4 py-4 md:py-8 min-h-screen">
-      {/* Mobile-only top button bar */}
       <div className="flex md:hidden w-full justify-between items-center">
         <BackButton />
       </div>
-      {/* Desktop-only left back button */}
       <div className="hidden md:block">
         <BackButton />
       </div>
